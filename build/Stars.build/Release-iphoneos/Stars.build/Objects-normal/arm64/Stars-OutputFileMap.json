@@ -1,0 +1,246 @@
+{
+  "" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary.dia",
+    "emit-module-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary-emit-module.dia",
+    "pch" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Stars-primary.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/ActionResolver.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ActionResolver.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ActionResolver.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ActionResolver.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/AgentAction.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentAction.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentAction.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentAction.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/AgentBrain.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentBrain.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentBrain.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentBrain.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/ContextBudgetMonitor.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ContextBudgetMonitor.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ContextBudgetMonitor.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ContextBudgetMonitor.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/LLMService.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LLMService.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LLMService.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LLMService.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/LongTermMemory.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LongTermMemory.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LongTermMemory.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/LongTermMemory.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/MemoryStore.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/MemoryStore.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/MemoryStore.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/MemoryStore.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/ProviderPayloadCodec.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPayloadCodec.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPayloadCodec.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPayloadCodec.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/Agent.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Agent.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Agent.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Agent.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/AgentManager.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentManager.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentManager.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentManager.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/AgentsFile.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentsFile.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentsFile.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentsFile.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/SoulStore.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SoulStore.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SoulStore.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SoulStore.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/StarsConstitution.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/StarsConstitution.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/StarsConstitution.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/StarsConstitution.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AppDelegate.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AppDelegate.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Camera/CameraController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CameraController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CameraController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CameraController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/BuildSystem.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/BuildSystem.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/BuildSystem.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/BuildSystem.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/CombatSystem.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CombatSystem.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CombatSystem.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/CombatSystem.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/PhysicsCategory.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/PhysicsCategory.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/PhysicsCategory.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/PhysicsCategory.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/Projectile.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Projectile.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Projectile.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Projectile.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/ProjectilePool.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProjectilePool.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProjectilePool.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProjectilePool.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Combat/WeaponSystem.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WeaponSystem.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WeaponSystem.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WeaponSystem.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/GameScene.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameScene.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameScene.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameScene.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/GameViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Models/KeychainHelper.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/KeychainHelper.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/KeychainHelper.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/KeychainHelper.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Models/ModelConfig.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConfig.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConfig.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConfig.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Models/ModelConnectionService.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConnectionService.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConnectionService.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelConnectionService.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Models/ModelManager.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelManager.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelManager.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelManager.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Models/ProviderCatalog.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderCatalog.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderCatalog.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderCatalog.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Persistence/GameStateStore.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameStateStore.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameStateStore.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GameStateStore.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Persistence/IncrementalArchiveStore.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/IncrementalArchiveStore.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/IncrementalArchiveStore.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/IncrementalArchiveStore.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Persistence/WorldEventLogStore.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldEventLogStore.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldEventLogStore.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldEventLogStore.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/SceneDelegate.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SceneDelegate.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SceneDelegate.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SceneDelegate.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/AgentChatView.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentChatView.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentChatView.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/AgentChatView.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/ConstitutionViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ConstitutionViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ConstitutionViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ConstitutionViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/ModelEditViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelEditViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelEditViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelEditViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/ModelSettingsViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelSettingsViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelSettingsViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ModelSettingsViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/ProviderPickerViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPickerViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPickerViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ProviderPickerViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/UI/SettingsViewController.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SettingsViewController.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SettingsViewController.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/SettingsViewController.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/Chunk.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Chunk.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Chunk.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Chunk.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/ChunkManager.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ChunkManager.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ChunkManager.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ChunkManager.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/Structure.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Structure.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Structure.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/Structure.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/TerrainGenerator.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TerrainGenerator.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TerrainGenerator.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TerrainGenerator.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/TileType.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TileType.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TileType.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/TileType.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/WorldClock.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldClock.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldClock.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldClock.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/WorldCommandRegistry.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldCommandRegistry.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldCommandRegistry.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/WorldCommandRegistry.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/World/ZSort.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ZSort.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ZSort.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/ZSort.o"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Release-iphoneos/Stars.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

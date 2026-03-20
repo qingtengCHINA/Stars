@@ -1,0 +1,37 @@
+{
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AppDelegate.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AppDelegate.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AppDelegate.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AppDelegate.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AppDelegate.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/GameScene.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameScene.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameScene.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameScene.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameScene.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameScene.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/GameViewController.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameViewController.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameViewController.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameViewController.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameViewController.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GameViewController.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/SceneDelegate.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SceneDelegate.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SceneDelegate.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SceneDelegate.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SceneDelegate.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SceneDelegate.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps"
+  }
+}

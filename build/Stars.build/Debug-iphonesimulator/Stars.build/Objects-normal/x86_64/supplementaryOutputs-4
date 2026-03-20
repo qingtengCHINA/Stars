@@ -1,0 +1,44 @@
+{
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/AI/ActionResolver.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/ActionResolver.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/ActionResolver.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/ActionResolver.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/ActionResolver.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/ActionResolver.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/Agent.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/Agent.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/Agent.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/Agent.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/Agent.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/Agent.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/AgentManager.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentManager.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentManager.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentManager.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentManager.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentManager.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/AgentsFile.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentsFile.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentsFile.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentsFile.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentsFile.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/AgentsFile.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/SoulStore.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SoulStore.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SoulStore.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SoulStore.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SoulStore.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/SoulStore.swiftdeps"
+  },
+  "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/Stars/Agents/StarsConstitution.swift" : {
+    "const-values" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/StarsConstitution.swiftconstvalues",
+    "dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/StarsConstitution.d",
+    "diagnostics" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/StarsConstitution.dia",
+    "object" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/StarsConstitution.o",
+    "swift-dependencies" : "/Users/qingteng/Downloads/项目代码_Projects/我的制作/Stars/build/Stars.build/Debug-iphonesimulator/Stars.build/Objects-normal/x86_64/StarsConstitution.swiftdeps"
+  }
+}
