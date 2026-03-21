@@ -54,7 +54,7 @@ final class ModelEditViewController: UIViewController {
     private var scrollView: UIScrollView!
     private var fetchedModels: [String] = []
     private var pendingConnectionStatus: ModelConnectionStatus = .unknown
-    private var pendingConnectionMessage = "尚未测试连接。"
+    private lazy var pendingConnectionMessage = NSLocalizedString("edit.connection_default", comment: "")
     private var providerDefinition: ProviderDefinition { mode.provider.definition }
     private var usesStaticCatalog: Bool {
         if case .staticCatalog = providerDefinition.modelCatalogMode {
@@ -84,9 +84,9 @@ final class ModelEditViewController: UIViewController {
         fetchedModels = providerDefinition.catalogModels
 
         if case .edit(let config) = mode {
-            title = "Agent 设置 · \(config.alias)"
+            title = String(format: NSLocalizedString("edit.title_edit", comment: ""), config.alias)
         } else {
-            title = "添加 \(mode.provider.displayName)"
+            title = String(format: NSLocalizedString("edit.title_add", comment: ""), mode.provider.displayName)
         }
 
         setupNavBar()
@@ -116,7 +116,7 @@ final class ModelEditViewController: UIViewController {
 
         // "← 返回" pixel button
         var btnConfig = UIButton.Configuration.filled()
-        btnConfig.title = "← 返回"
+        btnConfig.title = NSLocalizedString("edit.back", comment: "")
         btnConfig.baseForegroundColor = PixelTheme.textCream
         btnConfig.baseBackgroundColor = PixelTheme.bgLight
         btnConfig.cornerStyle = .fixed
@@ -124,7 +124,7 @@ final class ModelEditViewController: UIViewController {
         btnConfig.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 14, bottom: 7, trailing: 14)
         btnConfig.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var attr = incoming
-            attr.font = PixelTheme.boldFont(size: 13)
+            attr.font = PixelTheme.boldFont(size: 16)
             return attr
         }
         let backButton = UIButton(configuration: btnConfig)
@@ -134,7 +134,7 @@ final class ModelEditViewController: UIViewController {
         backButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "📖 文档",
+            title: NSLocalizedString("edit.docs", comment: ""),
             style: .plain,
             target: self,
             action: #selector(openProviderDocs)
@@ -173,13 +173,13 @@ final class ModelEditViewController: UIViewController {
         stack.addArrangedSubview(makeSpacer(14))
 
         // ── 标签 ──
-        stack.addArrangedSubview(makeSectionTitle("标签"))
+        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_alias", comment: "")))
         aliasField.autocapitalizationType = .words
-        stack.addArrangedSubview(makeCardField(aliasField, placeholder: "AI 服务商名称"))
+        stack.addArrangedSubview(makeCardField(aliasField, placeholder: NSLocalizedString("edit.placeholder_alias", comment: "")))
         stack.addArrangedSubview(makeSpacer(12))
 
         // ── API Key ──
-        stack.addArrangedSubview(makeSectionTitle("API Key"))
+        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_apikey", comment: "")))
         apiKeyField.isSecureTextEntry = true
         apiKeyField.autocapitalizationType = .none
         apiKeyField.autocorrectionType = .no
@@ -193,11 +193,11 @@ final class ModelEditViewController: UIViewController {
         apiKeyField.rightViewMode = .always
 
         stack.addArrangedSubview(makeCardField(apiKeyField, placeholder: provider.apiKeyPlaceholder))
-        stack.addArrangedSubview(makeHint("您的密钥安全存储在 iOS 钥匙串中，不会离开设备。"))
+        stack.addArrangedSubview(makeHint(NSLocalizedString("edit.apikey_hint", comment: "")))
         stack.addArrangedSubview(makeSpacer(8))
 
         // ── 自定义 API 地址（可选）──
-        stack.addArrangedSubview(makeSectionTitle("自定义 API 地址（可选）"))
+        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_baseurl", comment: "")))
 
         baseURLField.keyboardType = .URL
         baseURLField.autocapitalizationType = .none
@@ -221,14 +221,14 @@ final class ModelEditViewController: UIViewController {
         stack.addArrangedSubview(makeSpacer(8))
 
         // ── 模型名称 ──
-        stack.addArrangedSubview(makeSectionTitle("模型名称"))
+        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_model", comment: "")))
         modelNameField.autocapitalizationType = .none
         modelNameField.autocorrectionType = .no
         modelNameField.text = provider.defaultModel
         stack.addArrangedSubview(makeCardField(modelNameField, placeholder: provider.defaultModel))
-        stack.addArrangedSubview(makeHint("用于 API 请求的模型标识符。支持直接输入自定义模型名。"))
-        selectModelButton.setTitle(usesStaticCatalog ? "📋 从内置目录中选择模型" : "📋 从拉取结果中选择模型", for: .normal)
-        selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 12)
+        stack.addArrangedSubview(makeHint(NSLocalizedString("edit.model_hint", comment: "")))
+        selectModelButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.select_builtin", comment: "") : NSLocalizedString("edit.select_fetched", comment: ""), for: .normal)
+        selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
         selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
         selectModelButton.backgroundColor = PixelTheme.bgMedium
         selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
@@ -244,35 +244,35 @@ final class ModelEditViewController: UIViewController {
 
         // ── SOUL 配置 (edit mode only) ──
         if mode.isEdit {
-            stack.addArrangedSubview(makeSectionTitle("SOUL — 人格"))
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_soul_personality", comment: "")))
             stack.addArrangedSubview(makeTextViewCard(personalityTextView, height: 50))
-            stack.addArrangedSubview(makeHint("Agent 的性格特质与行为倾向。"))
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.hint_personality", comment: "")))
             stack.addArrangedSubview(makeSpacer(6))
 
-            stack.addArrangedSubview(makeSectionTitle("SOUL — 信念"))
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_soul_beliefs", comment: "")))
             stack.addArrangedSubview(makeTextViewCard(beliefsTextView, height: 50))
-            stack.addArrangedSubview(makeHint("Agent 的价值观与世界观。"))
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.hint_beliefs", comment: "")))
             stack.addArrangedSubview(makeSpacer(6))
 
-            stack.addArrangedSubview(makeSectionTitle("SOUL — 目标"))
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_soul_goals", comment: "")))
             stack.addArrangedSubview(makeTextViewCard(goalsTextView, height: 50))
-            stack.addArrangedSubview(makeHint("Agent 当前正在追求的目标。"))
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.hint_goals", comment: "")))
             stack.addArrangedSubview(makeSpacer(6))
 
-            stack.addArrangedSubview(makeSectionTitle("SOUL — 日志"))
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_soul_journal", comment: "")))
             stack.addArrangedSubview(makeTextViewCard(journalTextView, height: 60))
-            stack.addArrangedSubview(makeHint("Agent 对近期事件的反思与总结。"))
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.hint_journal", comment: "")))
             stack.addArrangedSubview(makeSpacer(12))
 
             // ── Memory Info ──
-            stack.addArrangedSubview(makeSectionTitle("记忆"))
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_memory", comment: "")))
             stack.addArrangedSubview(makeMemoryInfoCard())
             stack.addArrangedSubview(makeSpacer(24))
         }
 
         // ── Submit Button ──
         let submitButton = makeActionButton(
-            title: mode.isEdit ? "保存修改" : "添加 AI 服务商",
+            title: mode.isEdit ? NSLocalizedString("edit.save", comment: "") : NSLocalizedString("edit.add_provider", comment: ""),
             color: UIColor(white: 0.55, alpha: 1)
         )
         submitButton.addTarget(self, action: #selector(saveModel), for: .touchUpInside)
@@ -281,7 +281,7 @@ final class ModelEditViewController: UIViewController {
         // ── Delete Button (edit mode) ──
         if mode.isEdit {
             stack.addArrangedSubview(makeSpacer(12))
-            let deleteButton = makeActionButton(title: "删除此配置", color: .systemRed)
+            let deleteButton = makeActionButton(title: NSLocalizedString("edit.delete_config", comment: ""), color: .systemRed)
             deleteButton.addTarget(self, action: #selector(deleteModel), for: .touchUpInside)
             stack.addArrangedSubview(deleteButton)
         }
@@ -312,7 +312,7 @@ final class ModelEditViewController: UIViewController {
 
         // Update memory info
         let ltmCount = LongTermMemory.shared.entries(for: config.id.uuidString).count
-        memoryCountLabel.text = "长期记忆: \(ltmCount) 条"
+        memoryCountLabel.text = String(format: NSLocalizedString("edit.ltm_count", comment: ""), ltmCount)
     }
 
     // MARK: - UI Builders
@@ -327,22 +327,22 @@ final class ModelEditViewController: UIViewController {
 
         let title = UILabel()
         title.translatesAutoresizingMaskIntoConstraints = false
-        title.font = PixelTheme.headerFont(size: 15)
+        title.font = PixelTheme.headerFont(size: 18)
         title.textColor = PixelTheme.textCream
         title.text = providerDefinition.selectionTitle
 
         let subtitle = UILabel()
         subtitle.translatesAutoresizingMaskIntoConstraints = false
-        subtitle.font = PixelTheme.bodyFont(size: 11)
+        subtitle.font = PixelTheme.bodyFont(size: 14)
         subtitle.textColor = PixelTheme.textTan
         subtitle.numberOfLines = 0
         subtitle.text = providerDefinition.selectionSubtitle
 
         let stack = UIStackView(arrangedSubviews: [
-            makeMetaPill("协议", value: providerDefinition.protocolLabel),
-            makeMetaPill("鉴权", value: providerDefinition.authLabel),
-            makeMetaPill("模型", value: providerDefinition.modelSourceLabel),
-            makeMetaPill("上下文", value: "\(providerDefinition.contextWindowTokens.formatted()) tokens"),
+            makeMetaPill(NSLocalizedString("meta.protocol", comment: ""), value: providerDefinition.protocolLabel),
+            makeMetaPill(NSLocalizedString("meta.auth", comment: ""), value: providerDefinition.authLabel),
+            makeMetaPill(NSLocalizedString("meta.model", comment: ""), value: providerDefinition.modelSourceLabel),
+            makeMetaPill(NSLocalizedString("meta.context", comment: ""), value: "\(providerDefinition.contextWindowTokens.formatted()) tokens"),
         ])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .vertical
@@ -374,7 +374,7 @@ final class ModelEditViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
-        label.font = PixelTheme.bodyFont(size: 11)
+        label.font = PixelTheme.bodyFont(size: 14)
         label.textColor = PixelTheme.textCream
         label.text = "\(key): \(value)"
 
@@ -412,29 +412,29 @@ final class ModelEditViewController: UIViewController {
     }
 
     private func providerBaseURLPlaceholder() -> String {
-        providerDefinition.defaultBaseURL.isEmpty ? "根据官方文档填写 base URL" : providerDefinition.defaultBaseURL
+        providerDefinition.defaultBaseURL.isEmpty ? NSLocalizedString("edit.url_hint_docs", comment: "") : providerDefinition.defaultBaseURL
     }
 
     private func providerBaseURLHint() -> String {
         if mode.provider == .minimax {
-            return "MiniMax Anthropic 兼容层默认使用 /anthropic/v1/messages。建议留空使用默认值，或填写到 /anthropic/v1 为止。"
+            return NSLocalizedString("edit.url_hint_minimax", comment: "")
         }
         if providerDefinition.protocolFamily == .anthropicMessages {
             if providerDefinition.defaultBaseURL.isEmpty {
-                return "该服务商使用 Anthropic Messages 协议，请参考文档填写 base URL（需包含 /v1）。不要填写 /messages 这类具体接口路径。"
+                return NSLocalizedString("edit.url_hint_anthropic", comment: "")
             }
-            return "留空则使用默认端点。若自定义，请填写到 /v1 为止（如 https://your-host/v1），不要填写 /messages。"
+            return NSLocalizedString("edit.url_hint_anthropic_default", comment: "")
         }
         if providerDefinition.defaultBaseURL.isEmpty {
-            return "该服务商没有通用默认入口，需参考官方文档填写你的专属 base URL。只填主机地址，不要填写 /chat/completions、/models。"
+            return NSLocalizedString("edit.url_hint_custom", comment: "")
         }
-        return "留空则使用默认端点。建议只填主机地址，启用「自动附加 /v1」后会自动拼接。不要填写 /chat/completions、/models 这类接口路径。"
+        return NSLocalizedString("edit.url_hint_openai_default", comment: "")
     }
 
     private func makeCardField(_ field: UITextField, placeholder: String) -> UIView {
         field.placeholder = placeholder
         field.borderStyle = .none
-        field.font = PixelTheme.bodyFont(size: 14)
+        field.font = PixelTheme.bodyFont(size: 16)
         field.textColor = PixelTheme.textCream
         field.backgroundColor = .clear
         field.tintColor = PixelTheme.accentAmber
@@ -483,7 +483,7 @@ final class ModelEditViewController: UIViewController {
         // URL field
         field.placeholder = placeholder
         field.borderStyle = .none
-        field.font = PixelTheme.bodyFont(size: 14)
+        field.font = PixelTheme.bodyFont(size: 16)
         field.textColor = PixelTheme.textCream
         field.backgroundColor = .clear
         field.tintColor = PixelTheme.accentAmber
@@ -501,11 +501,11 @@ final class ModelEditViewController: UIViewController {
         // Toggle row
         let toggleLabel = UILabel()
         if providerDefinition.protocolFamily == .anthropicMessages {
-            toggleLabel.text = "Anthropic 格式无需附加 \"/v1\""
+            toggleLabel.text = NSLocalizedString("edit.append_v1_anthropic", comment: "")
         } else {
-            toggleLabel.text = "自动附加 \"/v1\""
+            toggleLabel.text = NSLocalizedString("edit.append_v1", comment: "")
         }
-        toggleLabel.font = PixelTheme.bodyFont(size: 13)
+        toggleLabel.font = PixelTheme.bodyFont(size: 16)
         toggleLabel.textColor = PixelTheme.textCream
         toggleLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -560,7 +560,7 @@ final class ModelEditViewController: UIViewController {
     private func makeHint(_ text: String) -> UIView {
         let label = UILabel()
         label.text = text
-        label.font = PixelTheme.bodyFont(size: 10)
+        label.font = PixelTheme.bodyFont(size: 12)
         label.textColor = PixelTheme.textMuted
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -578,7 +578,7 @@ final class ModelEditViewController: UIViewController {
 
     private func makeTextViewCard(_ textView: UITextView, height: CGFloat) -> UIView {
         textView.backgroundColor = .clear
-        textView.font = PixelTheme.bodyFont(size: 13)
+        textView.font = PixelTheme.bodyFont(size: 16)
         textView.textColor = PixelTheme.textCream
         textView.textContainerInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         textView.isScrollEnabled = false
@@ -613,14 +613,14 @@ final class ModelEditViewController: UIViewController {
         card.layer.borderColor = PixelTheme.borderWarm.cgColor
         card.translatesAutoresizingMaskIntoConstraints = false
 
-        memoryCountLabel.font = PixelTheme.bodyFont(size: 13)
+        memoryCountLabel.font = PixelTheme.bodyFont(size: 16)
         memoryCountLabel.textColor = PixelTheme.textTan
-        memoryCountLabel.text = "📚 长期记忆: 0 条"
+        memoryCountLabel.text = NSLocalizedString("edit.ltm_label", comment: "")
         memoryCountLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let clearButton = UIButton(type: .system)
-        clearButton.setTitle("🗑️ 清除记忆", for: .normal)
-        clearButton.titleLabel?.font = PixelTheme.bodyFont(size: 12)
+        clearButton.setTitle(NSLocalizedString("edit.clear_memory", comment: ""), for: .normal)
+        clearButton.titleLabel?.font = PixelTheme.bodyFont(size: 14)
         clearButton.tintColor = PixelTheme.accentRed
         clearButton.addTarget(self, action: #selector(clearMemory), for: .touchUpInside)
         clearButton.translatesAutoresizingMaskIntoConstraints = false
@@ -649,7 +649,7 @@ final class ModelEditViewController: UIViewController {
     private func makeActionButton(title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = PixelTheme.headerFont(size: 16)
+        button.titleLabel?.font = PixelTheme.headerFont(size: 18)
         button.setTitleColor(color, for: .normal)
         button.backgroundColor = PixelTheme.bgMedium
         button.layer.cornerRadius = PixelTheme.cornerRadius
@@ -672,7 +672,7 @@ final class ModelEditViewController: UIViewController {
         connectionDotView.layer.cornerRadius = 6
 
         connectionStatusLabel.translatesAutoresizingMaskIntoConstraints = false
-        connectionStatusLabel.font = PixelTheme.bodyFont(size: 12)
+        connectionStatusLabel.font = PixelTheme.bodyFont(size: 14)
         connectionStatusLabel.textColor = PixelTheme.textCream
         connectionStatusLabel.numberOfLines = 0
 
@@ -704,8 +704,8 @@ final class ModelEditViewController: UIViewController {
     }
 
     private func makeUtilityButtonsRow() -> UIView {
-        testConnectionButton.setTitle("🔌 测试连接", for: .normal)
-        testConnectionButton.titleLabel?.font = PixelTheme.boldFont(size: 13)
+        testConnectionButton.setTitle(NSLocalizedString("edit.test_connection", comment: ""), for: .normal)
+        testConnectionButton.titleLabel?.font = PixelTheme.boldFont(size: 16)
         testConnectionButton.setTitleColor(PixelTheme.textWhite, for: .normal)
         testConnectionButton.backgroundColor = PixelTheme.accentGreen.withAlphaComponent(0.6)
         testConnectionButton.layer.cornerRadius = PixelTheme.cornerRadius
@@ -714,8 +714,8 @@ final class ModelEditViewController: UIViewController {
         testConnectionButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         testConnectionButton.addTarget(self, action: #selector(testConnection), for: .touchUpInside)
 
-        fetchModelsButton.setTitle(usesStaticCatalog ? "📋 加载内置模型" : "🔄 刷新模型", for: .normal)
-        fetchModelsButton.titleLabel?.font = PixelTheme.boldFont(size: 13)
+        fetchModelsButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.load_builtin_models", comment: "") : NSLocalizedString("edit.refresh_models", comment: ""), for: .normal)
+        fetchModelsButton.titleLabel?.font = PixelTheme.boldFont(size: 16)
         fetchModelsButton.setTitleColor(PixelTheme.textWhite, for: .normal)
         fetchModelsButton.backgroundColor = PixelTheme.accentBlue.withAlphaComponent(0.4)
         fetchModelsButton.layer.cornerRadius = PixelTheme.cornerRadius
@@ -777,7 +777,7 @@ final class ModelEditViewController: UIViewController {
     @objc private func saveModel() {
         let apiKey = currentAPIKey()
         guard !apiKey.isEmpty else {
-            showAlert("请输入 API Key")
+            showAlert(NSLocalizedString("edit.enter_apikey", comment: ""))
             return
         }
 
@@ -816,12 +816,12 @@ final class ModelEditViewController: UIViewController {
         guard case .edit(let config) = mode else { return }
 
         let alert = UIAlertController(
-            title: "确认删除",
-            message: "确定要删除「\(config.alias)」吗？此操作不可撤销。",
+            title: NSLocalizedString("edit.delete_confirm_title", comment: ""),
+            message: String(format: NSLocalizedString("edit.delete_confirm_msg", comment: ""), config.alias),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("edit.cancel", comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("edit.delete", comment: ""), style: .destructive) { [weak self] _ in
             ModelManager.shared.deleteConfig(id: config.id)
             self?.dismiss(animated: true)
         })
@@ -829,22 +829,22 @@ final class ModelEditViewController: UIViewController {
     }
 
     private func showAlert(_ message: String) {
-        let alert = UIAlertController(title: "提示", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(title: NSLocalizedString("edit.alert_title", comment: ""), message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("edit.alert_confirm", comment: ""), style: .default))
         present(alert, animated: true)
     }
 
     @objc private func clearMemory() {
         guard case .edit(let config) = mode else { return }
         let alert = UIAlertController(
-            title: "清除记忆",
-            message: "确定要清除此 Agent 的全部长期记忆吗？此操作不可撤销。",
+            title: NSLocalizedString("edit.clear_memory_title", comment: ""),
+            message: NSLocalizedString("edit.clear_memory_msg", comment: ""),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("edit.cancel", comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("edit.clear", comment: ""), style: .destructive) { [weak self] _ in
             LongTermMemory.shared.removeAll(for: config.id.uuidString)
-            self?.memoryCountLabel.text = "长期记忆: 0 条"
+            self?.memoryCountLabel.text = String(format: NSLocalizedString("edit.ltm_count", comment: ""), 0)
         })
         present(alert, animated: true)
     }
@@ -852,13 +852,13 @@ final class ModelEditViewController: UIViewController {
     @objc private func testConnection() {
         let apiKey = currentAPIKey()
         guard !apiKey.isEmpty else {
-            showAlert("请输入 API Key 后再测试连接。")
+            showAlert(NSLocalizedString("edit.test_need_key", comment: ""))
             return
         }
 
         let draft = makeDraftConfig()
         pendingConnectionStatus = .unknown
-        pendingConnectionMessage = "正在测试连接..."
+        pendingConnectionMessage = NSLocalizedString("edit.testing", comment: "")
         updateConnectionStatusUI()
         setNetworkLoading(true)
 
@@ -883,12 +883,12 @@ final class ModelEditViewController: UIViewController {
     @objc private func refreshModels() {
         let apiKey = currentAPIKey()
         guard !apiKey.isEmpty else {
-            showAlert(usesStaticCatalog ? "请输入 API Key 后再加载模型目录。" : "请输入 API Key 后再刷新模型。")
+            showAlert(usesStaticCatalog ? NSLocalizedString("edit.fetch_need_key_catalog", comment: "") : NSLocalizedString("edit.fetch_need_key_api", comment: ""))
             return
         }
 
         let draft = makeDraftConfig()
-        pendingConnectionMessage = usesStaticCatalog ? "正在加载内置模型目录..." : "正在拉取模型列表..."
+        pendingConnectionMessage = usesStaticCatalog ? NSLocalizedString("edit.loading_catalog", comment: "") : NSLocalizedString("edit.loading_api", comment: "")
         updateConnectionStatusUI()
         setNetworkLoading(true)
 
@@ -900,10 +900,10 @@ final class ModelEditViewController: UIViewController {
                     self.fetchedModels = models
                     self.pendingConnectionStatus = .success
                     self.pendingConnectionMessage = models.isEmpty
-                        ? (self.usesStaticCatalog ? "连接成功，但当前服务商没有内置模型目录。" : "连接成功，但服务端未返回模型列表。")
+                        ? (self.usesStaticCatalog ? NSLocalizedString("edit.success_no_catalog", comment: "") : NSLocalizedString("edit.success_no_api", comment: ""))
                         : (self.usesStaticCatalog
-                            ? "已载入 \(models.count) 个内置参考模型，可直接选择或手动输入。"
-                            : "已拉取 \(models.count) 个模型，可直接选择或手动输入。")
+                            ? String(format: NSLocalizedString("edit.loaded_catalog", comment: ""), models.count)
+                            : String(format: NSLocalizedString("edit.loaded_api", comment: ""), models.count))
                     self.selectModelButton.isEnabled = !models.isEmpty
                     self.selectModelButton.alpha = models.isEmpty ? 0.45 : 1.0
                     self.updateConnectionStatusUI()
@@ -930,12 +930,12 @@ final class ModelEditViewController: UIViewController {
 
     private func presentFetchedModelsPicker() {
         guard !fetchedModels.isEmpty else {
-            showAlert(usesStaticCatalog ? "请先加载内置模型目录。" : "请先刷新模型列表。")
+            showAlert(usesStaticCatalog ? NSLocalizedString("edit.select_need_catalog", comment: "") : NSLocalizedString("edit.select_need_api", comment: ""))
             return
         }
 
         let sheet = UIAlertController(
-            title: usesStaticCatalog ? "选择内置模型" : "选择模型",
+            title: usesStaticCatalog ? NSLocalizedString("edit.select_catalog_title", comment: "") : NSLocalizedString("edit.select_api_title", comment: ""),
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -944,7 +944,7 @@ final class ModelEditViewController: UIViewController {
                 self?.modelNameField.text = model
             })
         }
-        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        sheet.addAction(UIAlertAction(title: NSLocalizedString("edit.cancel", comment: ""), style: .cancel))
 
         if let popover = sheet.popoverPresentationController {
             popover.sourceView = selectModelButton

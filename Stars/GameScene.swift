@@ -25,6 +25,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var tapGesture: UITapGestureRecognizer?
 
     var agentSelectionHandler: ((Agent) -> Void)?
+    private var focusIndex = -1
 
     // MARK: - Lifecycle
 
@@ -62,8 +63,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // Clock HUD label — top-right corner
         clockLabel = SKLabelNode(text: "")
-        clockLabel.fontName = "Menlo-Bold"
-        clockLabel.fontSize = 11
+        clockLabel.fontName = PixelTheme.skMonoFontName
+        clockLabel.fontSize = 14
         clockLabel.fontColor = SKColor(white: 0.85, alpha: 0.9)
         clockLabel.horizontalAlignmentMode = .right
         clockLabel.verticalAlignmentMode = .top
@@ -95,6 +96,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     func didBegin(_ contact: SKPhysicsContact) {
         combatSystem.handleContact(contact)
+    }
+
+    // MARK: - Agent Focus
+
+    /// Cycle camera to the next agent. Returns the focused agent (or nil if none).
+    @discardableResult
+    func focusNextAgent() -> Agent? {
+        let agents = agentManager.agents
+        guard !agents.isEmpty else { return nil }
+
+        focusIndex = (focusIndex + 1) % agents.count
+        let agent = agents[focusIndex]
+
+        // Animate camera to agent position
+        let moveAction = SKAction.move(to: agent.position, duration: 0.3)
+        moveAction.timingMode = .easeInEaseOut
+        cameraController.cameraNode.run(moveAction)
+
+        return agent
     }
 
     // MARK: - Gesture Handlers
@@ -275,8 +295,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             WorldClock.shared.restore(totalMinutes: snapshot.worldTimeMinutes)
             WorldEventLogStore.shared.append(
                 category: .persistence,
-                title: "世界恢复",
-                message: "已恢复 \(snapshot.agents.count) 个 agent、\(snapshot.structures.count) 个结构和 \(snapshot.customCommands.count) 条自定义命令。"
+                title: NSLocalizedString("log.world_restored", comment: ""),
+                message: String(format: NSLocalizedString("log.world_restored_msg", comment: ""), snapshot.agents.count, snapshot.structures.count, snapshot.customCommands.count)
             )
         } else {
             cameraController.restore(position: CGPoint(x: 128, y: 128), scale: 1.35)
@@ -305,8 +325,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         IncrementalArchiveStore.shared.reset(after: snapshot)
         WorldEventLogStore.shared.append(
             category: .persistence,
-            title: "世界快照",
-            message: "已保存完整世界快照：\(snapshot.agents.count) 个 agent，\(snapshot.structures.count) 个结构。"
+            title: NSLocalizedString("log.world_snapshot", comment: ""),
+            message: String(format: NSLocalizedString("log.world_snapshot_msg", comment: ""), snapshot.agents.count, snapshot.structures.count)
         )
     }
 

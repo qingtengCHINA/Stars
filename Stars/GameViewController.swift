@@ -11,6 +11,7 @@ class GameViewController: UIViewController {
     private var chatView: AgentChatView?
     private var chatWidthConstraint: NSLayoutConstraint?
     private var chatTrailingConstraint: NSLayoutConstraint?
+    private weak var gameScene: GameScene?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,6 +23,7 @@ class GameViewController: UIViewController {
         scene.agentSelectionHandler = { [weak self] agent in
             self?.showChat(for: agent)
         }
+        self.gameScene = scene
 
         skView.presentScene(scene)
         skView.ignoresSiblingOrder = true
@@ -31,29 +33,56 @@ class GameViewController: UIViewController {
         skView.showsNodeCount = true
         #endif
 
-        setupSettingsButton()
+        setupHUDButtons()
     }
 
     // MARK: - UI
 
-    private func setupSettingsButton() {
+    private func setupHUDButtons() {
+        let settingsBtn = makeHUDButton(iconName: "设置")
+        settingsBtn.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
+
+        let findBtn = makeHUDButton(iconName: "查找")
+        findBtn.addTarget(self, action: #selector(findNextAgent), for: .touchUpInside)
+
+        view.addSubview(settingsBtn)
+        view.addSubview(findBtn)
+        NSLayoutConstraint.activate([
+            settingsBtn.widthAnchor.constraint(equalToConstant: 38),
+            settingsBtn.heightAnchor.constraint(equalToConstant: 38),
+            settingsBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            settingsBtn.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
+
+            findBtn.widthAnchor.constraint(equalToConstant: 38),
+            findBtn.heightAnchor.constraint(equalToConstant: 38),
+            findBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            findBtn.leadingAnchor.constraint(equalTo: settingsBtn.trailingAnchor, constant: 6),
+        ])
+    }
+
+    private func makeHUDButton(iconName: String) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle("⚙️", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 20)
+        if let image = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+            button.setImage(image, for: .normal)
+            button.imageView?.contentMode = .scaleAspectFit
+            let inset: CGFloat = 7
+            button.contentEdgeInsets = UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
+        } else {
+            button.setTitle(iconName, for: .normal)
+            button.titleLabel?.font = PixelTheme.headerFont(size: 20)
+        }
         button.backgroundColor = PixelTheme.bgMedium.withAlphaComponent(0.9)
         button.layer.cornerRadius = PixelTheme.cornerRadius
         button.layer.borderWidth = PixelTheme.borderWidth
         button.layer.borderColor = PixelTheme.borderWarm.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
+        return button
+    }
 
-        view.addSubview(button)
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 38),
-            button.heightAnchor.constraint(equalToConstant: 38),
-            button.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            button.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
-        ])
+    @objc private func findNextAgent() {
+        guard let agent = gameScene?.focusNextAgent() else { return }
+        // Also open chat for the focused agent
+        showChat(for: agent)
     }
 
     @objc private func openSettings() {

@@ -1,0 +1,194 @@
+/* ──────────────────────────────────────
+   Localizable.strings (en)
+   Stars — English
+   ────────────────────────────────────── */
+
+// MARK: - Settings
+
+"settings.title" = "⚙️ Settings";
+"settings.done" = "Done";
+"settings.header" = "─── Stars Control Panel ───";
+"settings.agent_management" = "Agent Management";
+"settings.constitution" = "World Constitution";
+"settings.about" = "About Stars";
+
+// MARK: - Model Settings (Agent Management)
+
+"models.title" = "🏰 Agent Management";
+"models.add" = "＋ Summon";
+"models.empty_title" = "No Agents Yet\n\nTap \"＋ Summon\"\nto bring an AI soul into Stars";
+"models.delete" = "⚠️ Delete";
+"models.soul_empty" = "🌑 SOUL: Not Yet Awakened";
+
+// MARK: - Model Edit
+
+"edit.title_edit" = "Agent Settings · %@";
+"edit.title_add" = "Add %@";
+"edit.back" = "← Back";
+"edit.docs" = "📖 Docs";
+"edit.section_alias" = "Label";
+"edit.placeholder_alias" = "AI Provider Name";
+"edit.section_apikey" = "API Key";
+"edit.apikey_hint" = "Your key is securely stored in the iOS Keychain and never leaves the device.";
+"edit.section_baseurl" = "Custom API URL (Optional)";
+"edit.section_model" = "Model Name";
+"edit.model_hint" = "Model identifier for API requests. You can also type a custom model name directly.";
+"edit.select_builtin" = "📋 Select from Built-in Models";
+"edit.select_fetched" = "📋 Select from Fetched Models";
+"edit.section_soul_personality" = "SOUL — Personality";
+"edit.hint_personality" = "The agent's character traits and behavioral tendencies.";
+"edit.section_soul_beliefs" = "SOUL — Beliefs";
+"edit.hint_beliefs" = "The agent's values and worldview.";
+"edit.section_soul_goals" = "SOUL — Goals";
+"edit.hint_goals" = "The goals the agent is currently pursuing.";
+"edit.section_soul_journal" = "SOUL — Journal";
+"edit.hint_journal" = "The agent's reflections and summaries of recent events.";
+"edit.section_memory" = "Memory";
+"edit.save" = "Save Changes";
+"edit.add_provider" = "Add AI Provider";
+"edit.delete_config" = "Delete This Config";
+"edit.ltm_count" = "Long-term Memory: %d entries";
+"edit.ltm_label" = "📚 Long-term Memory: 0 entries";
+"edit.clear_memory" = "🗑️ Clear Memory";
+"edit.test_connection" = "🔌 Test Connection";
+"edit.load_builtin_models" = "📋 Load Built-in Models";
+"edit.refresh_models" = "🔄 Refresh Models";
+"edit.enter_apikey" = "Please enter API Key";
+"edit.connection_default" = "Connection not yet tested.";
+"edit.append_v1_anthropic" = "Anthropic format does not need \"/v1\"";
+"edit.append_v1" = "Auto-append \"/v1\"";
+"edit.url_hint_docs" = "Fill in the base URL according to official docs";
+"edit.url_hint_minimax" = "MiniMax Anthropic compatibility layer defaults to /anthropic/v1/messages. Leave empty for the default, or fill up to /anthropic/v1.";
+"edit.url_hint_anthropic" = "This provider uses the Anthropic Messages protocol. Refer to docs for the base URL (must include /v1). Do not include endpoint paths like /messages.";
+"edit.url_hint_anthropic_default" = "Leave empty for the default endpoint. If customizing, fill up to /v1 (e.g. https://your-host/v1). Do not include /messages.";
+"edit.url_hint_custom" = "This provider has no universal default endpoint. Refer to official docs for your specific base URL. Only fill in the host address, do not include /chat/completions or /models.";
+"edit.url_hint_openai_default" = "Leave empty for the default endpoint. Only fill in the host address; enabling \"Auto-append /v1\" will add it automatically. Do not include endpoint paths like /chat/completions or /models.";
+
+// MARK: - Constitution
+
+"constitution.title" = "📜 World Constitution";
+"constitution.save" = "💾 Save";
+"constitution.reset" = "🔄 Reset";
+"constitution.reset_alert_title" = "⚠️ Reset Constitution";
+"constitution.reset_alert_message" = "Restore to the default Stars Constitution?\nYour custom changes will be lost.";
+"constitution.cancel" = "Cancel";
+"constitution.reset_confirm" = "Reset";
+
+// MARK: - About
+
+"about.title" = "🌟 About Stars";
+"about.app_title" = "Stars · 群星";
+"about.subtitle" = "When AI Stars Shine";
+"about.description" = "A pixel-art AI sandbox world.\nLet AI Agents live, think, fight, and build freely here.\nEach Agent is powered by a large language model,\nwith independent memory, soul, and free will.";
+"about.opensource" = "📂 Open Source";
+"about.opensource_desc" = "Stars is a fully open-source project.\nContributions, Issues, and Stars are welcome!";
+"about.github" = "⭐ GitHub · Stars";
+"about.tip_title" = "Buy the Developer a Coffee";
+"about.tip_desc" = "If you enjoy Stars, you can buy the developer a coffee~\nYour support is the greatest motivation!";
+"about.tip_loading" = "☕ Loading...";
+"about.tip_buy" = "☕ Buy a Coffee %@";
+"about.tip_unavailable" = "☕ Unavailable";
+"about.tip_failed" = "☕ Load Failed";
+"about.tip_processing" = "☕ Processing...";
+"about.tip_thanks_title" = "🎉 Thank You!";
+"about.tip_thanks_message" = "Your coffee has been delivered! The developer will keep working hard on Stars~";
+"about.tip_thanks_ok" = "OK!";
+"about.terms" = "📄 Terms of Service";
+"about.privacy" = "🔒 Privacy Policy";
+"about.recommended" = "📱 Recommended Apps";
+
+// MARK: - Provider Picker
+
+"provider.title" = "🔧 Select AI Provider";
+"provider.cancel" = "Cancel";
+"provider.search" = "Search provider / protocol / model";
+
+// MARK: - Chat
+
+"chat.dead" = "💀 Dead";
+"chat.waiting" = "🧠 Awaiting First Thought";
+"chat.detail_collapsed" = "▶ Log · Memory · Thought";
+"chat.detail_expanded" = "▼ Log · Memory · Thought";
+"chat.input_placeholder" = "Talk to the Agent...";
+"chat.agent_missing" = "Agent Not Found";
+"chat.owner" = "Owner";
+"chat.thinking" = "%@ is thinking...";
+"chat.thought" = "💭 Current thought: %@";
+"chat.short_memory" = "── Short-term Memory (%d entries) ──";
+"chat.long_memory" = "── Long-term Memory: %d entries ──";
+"chat.system_log" = "── System Log ──";
+
+// MARK: - Edit Alerts
+
+"edit.delete_confirm_title" = "Confirm Delete";
+"edit.delete_confirm_msg" = "Delete \"%@\"? This action cannot be undone.";
+"edit.alert_title" = "Notice";
+"edit.alert_confirm" = "OK";
+"edit.cancel" = "Cancel";
+"edit.delete" = "Delete";
+"edit.clear_memory_title" = "Clear Memory";
+"edit.clear_memory_msg" = "Clear all long-term memory for this Agent? This action cannot be undone.";
+"edit.clear" = "Clear";
+"edit.test_need_key" = "Please enter API Key before testing connection.";
+"edit.testing" = "Testing connection...";
+"edit.fetch_need_key_catalog" = "Please enter API Key before loading model catalog.";
+"edit.fetch_need_key_api" = "Please enter API Key before refreshing models.";
+"edit.loading_catalog" = "Loading built-in model catalog...";
+"edit.loading_api" = "Fetching model list...";
+"edit.success_no_catalog" = "Connected successfully, but this provider has no built-in model catalog.";
+"edit.success_no_api" = "Connected successfully, but the server returned no model list.";
+"edit.loaded_catalog" = "Loaded %d built-in reference models. Select one or type manually.";
+"edit.loaded_api" = "Fetched %d models. Select one or type manually.";
+"edit.select_need_catalog" = "Please load the built-in model catalog first.";
+"edit.select_need_api" = "Please refresh the model list first.";
+"edit.select_catalog_title" = "Select Built-in Model";
+"edit.select_api_title" = "Select Model";
+
+// MARK: - Event Log Titles (non-UI, for persistence)
+
+"log.agents_updated" = "AGENTS File Updated";
+"log.agents_updated_msg" = "World rules modified by the Owner. (%d chars)";
+"log.learned_command" = "Learned New Command";
+"log.learned_command_msg" = "Registered custom command %@, based on %@.";
+"log.available_commands" = "Available commands: %@";
+"log.build_failed" = "Build Failed";
+"log.build_timeout" = "Build Timeout";
+"log.build_timeout_msg" = "Cannot reach target (%d, %d), build cancelled.";
+"log.build_complete" = "Build Complete";
+"log.build_complete_msg" = "Placed %3$@ at (%1$d, %2$d).";
+"log.build_fail_range" = "Target (%d, %d) is out of build range.";
+"log.build_fail_terrain" = "Target (%d, %d) terrain does not allow building.";
+"log.build_fail_occupied" = "Target (%d, %d) is already occupied.";
+"log.structure_damaged" = "Structure Hit";
+"log.structure_hit_ranged" = "%@ hit by ranged attack, HP %d/%d remaining.";
+"log.structure_hit_melee" = "%@ hit by melee attack, HP %d/%d remaining.";
+"log.structure_destroyed" = "Structure Destroyed";
+"log.structure_destroyed_msg" = "%@ has been destroyed.";
+"log.trap_triggered" = "Trap Triggered";
+"log.trap_triggered_msg" = "Stepped on %@, took %d damage.";
+"log.agent_damaged" = "Took Damage";
+"log.agent_damaged_msg" = "Took %d damage, HP now %d/%d.";
+"log.agent_died" = "Agent Died";
+"log.agent_died_msg" = "Brain stopped, token consumption paused. Respawn in %d seconds.";
+"log.agent_respawned" = "Agent Respawned";
+"log.agent_respawned_msg" = "Brain restarted, respawned at (%d, %d) with full HP.";
+"log.house_rest" = "House Rest";
+"log.house_rest_msg" = "%@ rested in their house for 10 hours, recovered %d HP.";
+"log.world_restored" = "World Restored";
+"log.world_restored_msg" = "Restored %d agents, %d structures, and %d custom commands.";
+"log.world_snapshot" = "World Snapshot";
+"log.world_snapshot_msg" = "Saved full world snapshot: %d agents, %d structures.";
+"log.soul_updated" = "SOUL Updated";
+"log.soul_updated_msg" = "Agent updated self-awareness.";
+"log.command_executed" = "Command Executed";
+"log.broadcast_received" = "Broadcast Received";
+"log.owner_message" = "Owner Message Received";
+"log.agent_reply" = "Agent Reply";
+"log.system_message" = "System Message";
+
+// MARK: - Meta Pills (Model Edit)
+
+"meta.protocol" = "Protocol";
+"meta.auth" = "Auth";
+"meta.model" = "Model";
+"meta.context" = "Context";

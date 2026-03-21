@@ -131,7 +131,7 @@ final class ActionResolver {
         case .build:
             if let t = response.target, let x = t.x, let y = t.y {
                 let buildTypeName = t.buildType ?? resolvedCommand.defaultBuildType ?? "wall"
-                let bType: StructureType = (buildTypeName == "trap") ? .trap : .wall
+                let bType: StructureType = StructureType(rawValue: buildTypeName) ?? .wall
                 agent.pendingBuild = PendingBuild(type: bType, tileX: x, tileY: y)
                 // Move toward build target — build executes when agent arrives within 1 tile
                 agent.moveTo(tileX: x, tileY: y)
@@ -175,8 +175,8 @@ final class ActionResolver {
             WorldEventLogStore.shared.append(
                 category: .lifecycle,
                 entityID: agent.entityID,
-                title: "SOUL 更新",
-                message: "Agent 更新了自我认知。"
+                title: NSLocalizedString("log.soul_updated", comment: ""),
+                message: NSLocalizedString("log.soul_updated_msg", comment: "")
             )
         }
 
@@ -184,7 +184,7 @@ final class ActionResolver {
         WorldEventLogStore.shared.append(
             category: .command,
             entityID: agent.entityID,
-            title: "执行命令",
+            title: NSLocalizedString("log.command_executed", comment: ""),
             message: "\(resolvedCommand.name) -> \(resolvedCommand.action.rawValue)"
         )
     }

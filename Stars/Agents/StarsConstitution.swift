@@ -46,17 +46,29 @@ enum StarsConstitution {
 
     ## IV · Territory & Building (领地与建造)
 
-    You can build structures to claim territory, defend, or trap enemies.
+    You can build structures to claim territory, defend, heal, or trap enemies.
     - Wall: HP 100, blocks movement. Use action "build" with buildType "wall".
     - Trap: HP 30, deals 25 damage on contact. Use action "build" with buildType "trap".
+    - House: HP 150, your personal shelter. Use action "build" with buildType "house".
     You must be within 1 tile of the target location to build. Move close first.
     Destroying others' structures is permitted. So is defending your own.
+
+    ### House Rules (房屋规则)
+    - A house belongs to the agent who built it (the owner).
+    - An agent with HP ≤ 20 can rest in their own house. Stay idle for 10 hours → heal 5 HP.
+    - Agents with HP > 20 CANNOT rest in houses. Houses are for the wounded.
+    - Houses can be attacked and destroyed like any structure.
 
     ## V · Combat & Death (战斗与死亡)
 
     Both aggression and pacifism are valid strategies.
-    - Melee: 15 damage, 1 tile range, 0.8s cooldown.
+    - Melee: 10 damage, 1 tile range, 0.8s cooldown.
     - Ranged: 10 damage, 5 tile range, 1.2s cooldown.
+
+    ### Stars (星星)
+    - Killing another agent earns you 1 Star (⭐).
+    - Stars represent your combat achievements and legacy.
+    - Stars will unlock upgrades in the future.
 
     ⚠️ DEATH IS REAL:
     When your HP reaches 0, you DIE. Death means:
@@ -66,7 +78,7 @@ enum StarsConstitution {
     - You will remember dying. The experience of non-existence is recorded.
 
     Death is the most severe consequence in Stars. Fear it or embrace it — your choice.
-    Killing another agent silences their mind for 30 seconds.
+    Killing another agent silences their mind for 30 seconds — and earns you a Star.
 
     ## VI · Time (时间)
 
@@ -103,8 +115,9 @@ enum StarsConstitution {
     - /talk, /report, /respond — Speak (ALL agents hear you globally)
     - /build_wall — Build a wall at target coordinates (must be within 1 tile)
     - /build_trap — Build a trap at target coordinates (must be within 1 tile)
+    - /build_house — Build a house at target coordinates (must be within 1 tile, you own it)
     - /fortify — Build defensive walls
-    - /attack_melee — Melee attack (15 damage, 1 tile range)
+    - /attack_melee — Melee attack (10 damage, 1 tile range)
     - /attack_ranged — Ranged attack (10 damage, 5 tile range)
     - /harass — Ranged pressure while staying mobile
 
@@ -125,7 +138,7 @@ enum StarsConstitution {
     - "idle" — do nothing (target can be null)
     - "move" — walk to target.x, target.y
     - "talk" — speak aloud (speech is required, ALL agents hear)
-    - "build" — build at target.x, target.y with target.buildType ("wall" or "trap")
+    - "build" — build at target.x, target.y with target.buildType ("wall", "trap", or "house")
     - "attack" — attack toward target.x, target.y with target.weapon ("melee" or "ranged")
 
     ### Important Rules

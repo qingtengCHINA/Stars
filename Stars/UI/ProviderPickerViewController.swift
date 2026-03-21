@@ -34,7 +34,7 @@ final class ProviderPickerViewController: UITableViewController, UISearchResults
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "🔧 选择 AI 服务商"
+        title = NSLocalizedString("provider.title", comment: "")
         overrideUserInterfaceStyle = .dark
 
         if let navBar = navigationController?.navigationBar {
@@ -42,7 +42,7 @@ final class ProviderPickerViewController: UITableViewController, UISearchResults
         }
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "取消",
+            title: NSLocalizedString("provider.cancel", comment: ""),
             style: .plain,
             target: self,
             action: #selector(closeSelf)
@@ -50,7 +50,7 @@ final class ProviderPickerViewController: UITableViewController, UISearchResults
 
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "搜索服务商 / 协议 / 模型"
+        searchController.searchBar.placeholder = NSLocalizedString("provider.search", comment: "")
         searchController.searchBar.tintColor = PixelTheme.accentAmber
         searchController.searchBar.barTintColor = PixelTheme.bgMedium
         navigationItem.searchController = searchController
@@ -109,18 +109,18 @@ private final class ProviderCell: UITableViewCell {
         cardBg.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(cardBg)
 
-        titleLabel.font = PixelTheme.boldFont(size: 14)
+        titleLabel.font = PixelTheme.boldFont(size: 16)
         titleLabel.textColor = PixelTheme.textCream
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(titleLabel)
 
-        subtitleLabel.font = PixelTheme.bodyFont(size: 11)
+        subtitleLabel.font = PixelTheme.bodyFont(size: 14)
         subtitleLabel.textColor = PixelTheme.textTan
         subtitleLabel.numberOfLines = 2
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(subtitleLabel)
 
-        protocolBadge.font = PixelTheme.boldFont(size: 9)
+        protocolBadge.font = PixelTheme.boldFont(size: 12)
         protocolBadge.textColor = PixelTheme.bgDark
         protocolBadge.backgroundColor = PixelTheme.accentAmber
         protocolBadge.layer.cornerRadius = 2
@@ -130,7 +130,7 @@ private final class ProviderCell: UITableViewCell {
         cardBg.addSubview(protocolBadge)
 
         arrowLabel.text = "▸"
-        arrowLabel.font = PixelTheme.boldFont(size: 14)
+        arrowLabel.font = PixelTheme.boldFont(size: 16)
         arrowLabel.textColor = PixelTheme.accentAmber
         arrowLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(arrowLabel)

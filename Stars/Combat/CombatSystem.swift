@@ -52,9 +52,10 @@ final class CombatSystem {
                     attacker.memory.record(type: .combat, content: "My ranged attack hit \(victim.displayName) for \(actualDamage) damage (target HP: \(victim.hp)/\(victim.maxHP))\(killMsg)")
 
                     if victim.isDead && !wasDead {
+                        attacker.awardStar()
                         LongTermMemory.shared.recordCombatEvent(
                             entityID: attacker.entityID,
-                            content: "Killed \(victim.displayName) with a ranged attack."
+                            content: "Killed \(victim.displayName) with a ranged attack. Earned a Star! (Total: \(attacker.stars))"
                         )
                     }
                 }
@@ -92,8 +93,8 @@ final class CombatSystem {
                 WorldEventLogStore.shared.append(
                     category: .combat,
                     entityID: structure.entityID,
-                    title: "结构受击",
-                    message: "\(structure.structureType.rawValue) 被远程攻击命中，剩余 HP \(structure.hp)/\(structure.maxHP)。"
+                    title: NSLocalizedString("log.structure_damaged", comment: ""),
+                    message: String(format: NSLocalizedString("log.structure_hit_ranged", comment: ""), structure.structureType.rawValue, structure.hp, structure.maxHP)
                 )
                 ProjectilePool.shared.recycle(proj)
                 return
@@ -125,9 +126,10 @@ final class CombatSystem {
                     attacker.memory.record(type: .combat, content: "My melee attack hit \(victim.displayName) for \(actualDamage) damage (target HP: \(victim.hp)/\(victim.maxHP))\(killMsg)")
 
                     if victim.isDead && !wasDead {
+                        attacker.awardStar()
                         LongTermMemory.shared.recordCombatEvent(
                             entityID: attacker.entityID,
-                            content: "Killed \(victim.displayName) with a melee attack."
+                            content: "Killed \(victim.displayName) with a melee attack. Earned a Star! (Total: \(attacker.stars))"
                         )
                     }
                 }
@@ -163,8 +165,8 @@ final class CombatSystem {
                 WorldEventLogStore.shared.append(
                     category: .combat,
                     entityID: structure.entityID,
-                    title: "结构受击",
-                    message: "\(structure.structureType.rawValue) 被近战命中，剩余 HP \(structure.hp)/\(structure.maxHP)。"
+                    title: NSLocalizedString("log.structure_damaged", comment: ""),
+                    message: String(format: NSLocalizedString("log.structure_hit_melee", comment: ""), structure.structureType.rawValue, structure.hp, structure.maxHP)
                 )
                 return
             }
@@ -203,8 +205,8 @@ final class CombatSystem {
                 WorldEventLogStore.shared.append(
                     category: .combat,
                     entityID: victim.entityID,
-                    title: "踩中陷阱",
-                    message: "踩中 \(trap.structureType.rawValue)，受到 \(actualDamage) 点伤害。"
+                    title: NSLocalizedString("log.trap_triggered", comment: ""),
+                    message: String(format: NSLocalizedString("log.trap_triggered_msg", comment: ""), trap.structureType.rawValue, actualDamage)
                 )
             }
             return

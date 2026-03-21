@@ -50,11 +50,17 @@ final class Agent: SKSpriteNode {
     var facingAngle: CGFloat = 0
     var pendingWeapon: WeaponType = .melee
     var weaponCooldown: TimeInterval = 0
+    private(set) var stars: Int = 0
 
     // MARK: - Building
 
     var pendingBuild: PendingBuild?
     var buildCooldown: TimeInterval = 0
+
+    // MARK: - House Resting
+
+    /// Accumulated real seconds the agent has been idle inside its own house.
+    var houseRestAccumulator: TimeInterval = 0
 
     // MARK: - Movement
 
@@ -192,8 +198,8 @@ final class Agent: SKSpriteNode {
         let display = text.count > 30 ? String(text.prefix(30)) + "…" : text
 
         let label = SKLabelNode(text: display)
-        label.fontSize = 5
-        label.fontName = "Helvetica"
+        label.fontSize = 6
+        label.fontName = PixelTheme.skFontName
         label.fontColor = .white
         label.position = CGPoint(x: 0, y: Self.agentSize / 2 + 6)
         label.numberOfLines = 2
@@ -205,6 +211,18 @@ final class Agent: SKSpriteNode {
 
         speechNode = label
         speechTimer = 5.0
+    }
+
+    func awardStar() {
+        stars += 1
+        memory.record(type: .combat, content: "Earned a Star! Total Stars: \(stars).")
+        showSpeechBubble("⭐ Star!")
+    }
+
+    func healHP(_ amount: Int) {
+        guard !isDead else { return }
+        hp = min(maxHP, hp + amount)
+        updateHPBar()
     }
 
     func startBuildCooldown(_ duration: TimeInterval) {
@@ -231,7 +249,7 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "owner-message",
             category: .chat,
-            title: "收到主人消息",
+            title: NSLocalizedString("log.owner_message", comment: ""),
             message: trimmed
         )
     }
@@ -245,7 +263,7 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "agent-reply",
             category: .chat,
-            title: "Agent 回复",
+            title: NSLocalizedString("log.agent_reply", comment: ""),
             message: trimmed
         )
     }
@@ -260,7 +278,7 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "system-message",
             category: .chat,
-            title: "系统消息",
+            title: NSLocalizedString("log.system_message", comment: ""),
             message: trimmed
         )
     }
@@ -281,8 +299,8 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "agent-damaged",
             category: .combat,
-            title: "受到伤害",
-            message: "受到 \(amount) 点伤害，当前 HP \(hp)/\(maxHP)。"
+            title: NSLocalizedString("log.agent_damaged", comment: ""),
+            message: String(format: NSLocalizedString("log.agent_damaged_msg", comment: ""), amount, hp, maxHP)
         )
     }
 
@@ -312,8 +330,8 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "agent-died",
             category: .combat,
-            title: "Agent 死亡",
-            message: "脑停止运行，Token 消耗暂停。重生等待 \(Int(respawnTimer)) 秒。"
+            title: NSLocalizedString("log.agent_died", comment: ""),
+            message: String(format: NSLocalizedString("log.agent_died_msg", comment: ""), Int(respawnTimer))
         )
     }
 
@@ -337,8 +355,8 @@ final class Agent: SKSpriteNode {
         persistMutation(
             reason: "agent-respawned",
             category: .combat,
-            title: "Agent 复活",
-            message: "脑已重启，在 (\(tileX), \(tileY)) 满血复活。"
+            title: NSLocalizedString("log.agent_respawned", comment: ""),
+            message: String(format: NSLocalizedString("log.agent_respawned_msg", comment: ""), tileX, tileY)
         )
     }
 
@@ -352,7 +370,9 @@ final class Agent: SKSpriteNode {
         shortTermMessages: [ShortTermMessage],
         forceNextThink: Bool,
         pendingOwnerReplies: Int,
-        respawnRemaining: TimeInterval
+        respawnRemaining: TimeInterval,
+        stars: Int = 0,
+        houseRestAccumulator: TimeInterval = 0
     ) {
         self.position = position
         self.hp = max(0, min(hp, maxHP))
@@ -364,6 +384,8 @@ final class Agent: SKSpriteNode {
         self.forceNextThink = forceNextThink
         self.pendingOwnerReplies = max(0, pendingOwnerReplies)
         self.respawnTimer = max(0, respawnRemaining)
+        self.stars = stars
+        self.houseRestAccumulator = houseRestAccumulator
 
         if isDead {
             applyDeadStateForRestore()

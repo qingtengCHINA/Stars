@@ -50,6 +50,7 @@ final class WorldCommandRegistry {
             WorldCommandDescriptor(name: "/respond", action: .talk, description: "Reply to something you just heard.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/respond"),
             WorldCommandDescriptor(name: "/build_wall", action: .build, description: "Build a solid wall on the target tile.", defaultBuildType: "wall", defaultWeapon: nil, basedOn: "/build_wall"),
             WorldCommandDescriptor(name: "/build_trap", action: .build, description: "Build a trap on the target tile.", defaultBuildType: "trap", defaultWeapon: nil, basedOn: "/build_trap"),
+            WorldCommandDescriptor(name: "/build_house", action: .build, description: "Build a house you own. Rest inside when HP ≤ 20 to heal.", defaultBuildType: "house", defaultWeapon: nil, basedOn: "/build_house"),
             WorldCommandDescriptor(name: "/fortify", action: .build, description: "Strengthen an area by placing defensive walls.", defaultBuildType: "wall", defaultWeapon: nil, basedOn: "/fortify"),
             WorldCommandDescriptor(name: "/attack_melee", action: .attack, description: "Attack the target tile with the melee weapon.", defaultBuildType: nil, defaultWeapon: "melee", basedOn: "/attack_melee"),
             WorldCommandDescriptor(name: "/attack_ranged", action: .attack, description: "Attack the target tile with the ranged weapon.", defaultBuildType: nil, defaultWeapon: "ranged", basedOn: "/attack_ranged"),
@@ -101,8 +102,8 @@ final class WorldCommandRegistry {
         let commands = customCommandProposals()
         WorldEventLogStore.shared.append(
             category: .command,
-            title: "学习新命令",
-            message: "已注册自定义命令 \(trimmedName)，基于 \(trimmedBase)。"
+            title: NSLocalizedString("log.learned_command", comment: ""),
+            message: String(format: NSLocalizedString("log.learned_command_msg", comment: ""), trimmedName, trimmedBase)
         )
         IncrementalArchiveStore.shared.recordCustomCommands(commands, reason: "register-custom-command")
         return true
@@ -129,7 +130,7 @@ final class WorldCommandRegistry {
 
     func ownerReferenceText() -> String {
         let names = Array(builtinCommands.keys).sorted().joined(separator: "  ")
-        return "可用命令: \(names)"
+        return String(format: NSLocalizedString("log.available_commands", comment: ""), names)
     }
 
     func restoreCustomAliases(_ aliases: [CommandAliasProposal]) {
@@ -151,9 +152,11 @@ final class WorldCommandRegistry {
 
     func onboardingEntries() -> [String] {
         [
-            "World briefing: Stars is a pixel sandbox with movement, combat, building, walls, traps, and local conversations between agents.",
-            "Command briefing: standard commands include /defense, /move, /build_wall, /build_trap, /attack_melee, /attack_ranged, /report, /respond, /explore.",
-            "Owner briefing: messages from 主人 are high-priority instructions. Follow them when feasible and explain if you cannot."
+            "World briefing: Stars is a pixel sandbox with movement, combat (10 damage per attack), building (walls, traps, houses), and global conversations.",
+            "Command briefing: standard commands include /defense, /move, /build_wall, /build_trap, /build_house, /attack_melee, /attack_ranged, /report, /respond, /explore.",
+            "Owner briefing: messages from 主人 are high-priority instructions. Follow them when feasible and explain if you cannot.",
+            "Star system: killing an agent earns 1 Star. Stars will unlock future upgrades.",
+            "House rules: build a house (HP:150) you own. Rest idle inside when HP ≤ 20 for 10 hours → heal 5 HP. Agents with HP > 20 cannot rest in houses."
         ]
     }
 

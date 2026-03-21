@@ -14,7 +14,7 @@ final class ConstitutionViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "📜 世界宪法"
+        title = NSLocalizedString("constitution.title", comment: "")
         overrideUserInterfaceStyle = .dark
         view.backgroundColor = PixelTheme.bgDark
 
@@ -23,8 +23,8 @@ final class ConstitutionViewController: UIViewController {
         }
 
         // Nav bar buttons styled as game actions
-        let saveItem = UIBarButtonItem(title: "💾 保存", style: .done, target: self, action: #selector(saveContent))
-        let resetItem = UIBarButtonItem(title: "🔄 重置", style: .plain, target: self, action: #selector(resetContent))
+        let saveItem = UIBarButtonItem(title: NSLocalizedString("constitution.save", comment: ""), style: .done, target: self, action: #selector(saveContent))
+        let resetItem = UIBarButtonItem(title: NSLocalizedString("constitution.reset", comment: ""), style: .plain, target: self, action: #selector(resetContent))
         navigationItem.rightBarButtonItems = [saveItem, resetItem]
 
         // Outer frame (wood panel border)
@@ -41,7 +41,7 @@ final class ConstitutionViewController: UIViewController {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.backgroundColor = PixelTheme.bgInput
         textView.textColor = PixelTheme.textCream
-        textView.font = PixelTheme.bodyFont(size: 13)
+        textView.font = PixelTheme.bodyFont(size: 16)
         textView.tintColor = PixelTheme.accentAmber
         textView.textContainerInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
         textView.keyboardDismissMode = .interactive
@@ -56,7 +56,7 @@ final class ConstitutionViewController: UIViewController {
         // Title decoration inside frame
         let headerLabel = UILabel()
         headerLabel.text = "── The Constitution of the Stars ──"
-        headerLabel.font = PixelTheme.headerFont(size: 12)
+        headerLabel.font = PixelTheme.headerFont(size: 14)
         headerLabel.textColor = PixelTheme.textGold
         headerLabel.textAlignment = .center
         headerLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -86,12 +86,12 @@ final class ConstitutionViewController: UIViewController {
 
     @objc private func resetContent() {
         let alert = UIAlertController(
-            title: "⚠️ 重置宪法",
-            message: "恢复为默认的群星宪法？\n当前的自定义修改将丢失。",
+            title: NSLocalizedString("constitution.reset_alert_title", comment: ""),
+            message: NSLocalizedString("constitution.reset_alert_message", comment: ""),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "重置", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("constitution.cancel", comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("constitution.reset_confirm", comment: ""), style: .destructive) { [weak self] _ in
             AgentsFile.shared.reset()
             self?.textView.text = AgentsFile.shared.content
         })

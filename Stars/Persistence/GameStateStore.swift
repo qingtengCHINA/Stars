@@ -60,6 +60,8 @@ struct AgentSnapshot: Codable, Sendable {
     let forceNextThink: Bool
     let pendingOwnerReplies: Int
     let respawnRemaining: Double
+    let stars: Int
+    let houseRestAccumulator: Double
 
     init(
         entityID: String,
@@ -77,7 +79,9 @@ struct AgentSnapshot: Codable, Sendable {
         shortTermMessages: [ShortTermMessage],
         forceNextThink: Bool,
         pendingOwnerReplies: Int,
-        respawnRemaining: Double
+        respawnRemaining: Double,
+        stars: Int = 0,
+        houseRestAccumulator: Double = 0
     ) {
         self.entityID = entityID
         self.modelConfigID = modelConfigID
@@ -95,6 +99,8 @@ struct AgentSnapshot: Codable, Sendable {
         self.forceNextThink = forceNextThink
         self.pendingOwnerReplies = pendingOwnerReplies
         self.respawnRemaining = respawnRemaining
+        self.stars = stars
+        self.houseRestAccumulator = houseRestAccumulator
     }
 
     init(from decoder: Decoder) throws {
@@ -115,6 +121,8 @@ struct AgentSnapshot: Codable, Sendable {
         forceNextThink = try container.decodeIfPresent(Bool.self, forKey: .forceNextThink) ?? false
         pendingOwnerReplies = try container.decodeIfPresent(Int.self, forKey: .pendingOwnerReplies) ?? 0
         respawnRemaining = try container.decodeIfPresent(Double.self, forKey: .respawnRemaining) ?? 0
+        stars = try container.decodeIfPresent(Int.self, forKey: .stars) ?? 0
+        houseRestAccumulator = try container.decodeIfPresent(Double.self, forKey: .houseRestAccumulator) ?? 0
     }
 
     init(agent: Agent) {
@@ -134,7 +142,9 @@ struct AgentSnapshot: Codable, Sendable {
             shortTermMessages: agent.shortTermMessages,
             forceNextThink: agent.forceNextThink,
             pendingOwnerReplies: agent.pendingOwnerReplies,
-            respawnRemaining: agent.respawnRemaining
+            respawnRemaining: agent.respawnRemaining,
+            stars: agent.stars,
+            houseRestAccumulator: agent.houseRestAccumulator
         )
     }
 }
@@ -145,13 +155,25 @@ struct StructureSnapshot: Codable, Sendable {
     let tileX: Int
     let tileY: Int
     let hp: Int
+    let ownerID: String?
 
-    init(entityID: String, type: StructureType, tileX: Int, tileY: Int, hp: Int) {
+    init(entityID: String, type: StructureType, tileX: Int, tileY: Int, hp: Int, ownerID: String? = nil) {
         self.entityID = entityID
         self.type = type
         self.tileX = tileX
         self.tileY = tileY
         self.hp = hp
+        self.ownerID = ownerID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        entityID = try container.decode(String.self, forKey: .entityID)
+        type = try container.decode(StructureType.self, forKey: .type)
+        tileX = try container.decode(Int.self, forKey: .tileX)
+        tileY = try container.decode(Int.self, forKey: .tileY)
+        hp = try container.decode(Int.self, forKey: .hp)
+        ownerID = try container.decodeIfPresent(String.self, forKey: .ownerID)
     }
 
     init(structure: Structure) {
@@ -160,7 +182,8 @@ struct StructureSnapshot: Codable, Sendable {
             type: structure.structureType,
             tileX: Int(floor(structure.position.x / Chunk.tileSize)),
             tileY: Int(floor(structure.position.y / Chunk.tileSize)),
-            hp: structure.hp
+            hp: structure.hp,
+            ownerID: structure.ownerID
         )
     }
 }

@@ -13,6 +13,7 @@ final class Structure: SKSpriteNode {
     let structureType: StructureType
     var hp: Int
     let maxHP: Int
+    var ownerID: String?   // entityID of the builder (for house ownership)
 
     // MARK: - Init
 
@@ -20,9 +21,11 @@ final class Structure: SKSpriteNode {
          tileX: Int,
          tileY: Int,
          entityID: String = UUID().uuidString,
-         startingHP: Int? = nil) {
+         startingHP: Int? = nil,
+         ownerID: String? = nil) {
         self.entityID = entityID
         self.structureType = type
+        self.ownerID = ownerID
         self.maxHP = type.maxHP
         self.hp = max(1, min(startingHP ?? type.maxHP, type.maxHP))
 
@@ -63,6 +66,10 @@ final class Structure: SKSpriteNode {
             body.categoryBitMask    = PhysicsCategory.trap
             body.contactTestBitMask = PhysicsCategory.agent
             body.collisionBitMask   = PhysicsCategory.none   // agents walk over traps
+        case .house:
+            body.categoryBitMask    = PhysicsCategory.structure
+            body.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.melee
+            body.collisionBitMask   = PhysicsCategory.none   // agents can enter houses
         }
 
         self.physicsBody = body
@@ -127,10 +134,34 @@ final class Structure: SKSpriteNode {
         let tex = SKTexture(image: image); tex.filteringMode = .nearest; return tex
     }()
 
+    private static let cachedHouseTexture: SKTexture = {
+        let px = 6
+        let fmt = UIGraphicsImageRendererFormat(); fmt.scale = 1.0
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: px, height: px), format: fmt)
+        let image = renderer.image { ctx in
+            // Roof (warm brown triangle-ish)
+            UIColor(red: 0.55, green: 0.30, blue: 0.15, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 1, y: 0, width: 4, height: 1))
+            ctx.fill(CGRect(x: 0, y: 1, width: 6, height: 1))
+            // Walls (tan)
+            UIColor(red: 0.72, green: 0.60, blue: 0.42, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 0, y: 2, width: 6, height: 4))
+            // Door (dark)
+            UIColor(red: 0.28, green: 0.20, blue: 0.12, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 2, y: 3, width: 2, height: 3))
+            // Window (sky blue)
+            UIColor(red: 0.55, green: 0.75, blue: 0.90, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 0, y: 3, width: 1, height: 1))
+            ctx.fill(CGRect(x: 5, y: 3, width: 1, height: 1))
+        }
+        let tex = SKTexture(image: image); tex.filteringMode = .nearest; return tex
+    }()
+
     private static func createTexture(for type: StructureType) -> SKTexture {
         switch type {
-        case .wall: return cachedWallTexture
-        case .trap: return cachedTrapTexture
+        case .wall:  return cachedWallTexture
+        case .trap:  return cachedTrapTexture
+        case .house: return cachedHouseTexture
         }
     }
 }

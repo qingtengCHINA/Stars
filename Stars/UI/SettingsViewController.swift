@@ -9,15 +9,22 @@ import UIKit
 
 final class SettingsViewController: UITableViewController {
 
-    private let items: [(title: String, icon: String)] = [
-        ("🏰  Agent 管理", ""),
-        ("📜  世界宪法", ""),
-        ("🌟  关于群星", ""),
-    ]
+    private struct MenuItem {
+        let title: String
+        let iconName: String?  // Asset catalog image name (nil = no icon)
+    }
+
+    private var items: [MenuItem] {
+        [
+            MenuItem(title: NSLocalizedString("settings.agent_management", comment: ""), iconName: "机器人"),
+            MenuItem(title: NSLocalizedString("settings.constitution", comment: ""),     iconName: "宪法"),
+            MenuItem(title: NSLocalizedString("settings.about", comment: ""),            iconName: "咖啡"),
+        ]
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "⚙️ 设置"
+        title = NSLocalizedString("settings.title", comment: "")
         overrideUserInterfaceStyle = .dark
 
         if let navBar = navigationController?.navigationBar {
@@ -25,7 +32,7 @@ final class SettingsViewController: UITableViewController {
         }
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "完成",
+            title: NSLocalizedString("settings.done", comment: ""),
             style: .done,
             target: self,
             action: #selector(dismissSettings)
@@ -56,7 +63,8 @@ final class SettingsViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! PixelMenuCell
-        cell.configure(title: items[indexPath.row].title)
+        let item = items[indexPath.row]
+        cell.configure(title: item.title, iconName: item.iconName)
         return cell
     }
 
@@ -64,8 +72,8 @@ final class SettingsViewController: UITableViewController {
         let header = UIView()
         header.backgroundColor = .clear
         let label = UILabel()
-        label.text = "─── 群星控制面板 ───"
-        label.font = PixelTheme.headerFont(size: 13)
+        label.text = NSLocalizedString("settings.header", comment: "")
+        label.font = PixelTheme.headerFont(size: 16)
         label.textColor = PixelTheme.textTan
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -93,13 +101,8 @@ final class SettingsViewController: UITableViewController {
             let vc = ConstitutionViewController()
             navigationController?.pushViewController(vc, animated: true)
         default:
-            let alert = UIAlertController(
-                title: "🌟 群星 · Stars",
-                message: "AI的群星闪耀时 v1.0\n\n一个像素风AI沙盒世界\n让AI Agent在这里自由生活",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "好的！", style: .default))
-            present(alert, animated: true)
+            let vc = AboutViewController()
+            navigationController?.pushViewController(vc, animated: true)
         }
     }
 }
@@ -108,6 +111,7 @@ final class SettingsViewController: UITableViewController {
 
 private final class PixelMenuCell: UITableViewCell {
 
+    private let iconView = UIImageView()
     private let titleLabel = UILabel()
     private let arrowLabel = UILabel()
     private let cardBg = UIView()
@@ -124,13 +128,17 @@ private final class PixelMenuCell: UITableViewCell {
         cardBg.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(cardBg)
 
-        titleLabel.font = PixelTheme.headerFont(size: 16)
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        cardBg.addSubview(iconView)
+
+        titleLabel.font = PixelTheme.headerFont(size: 18)
         titleLabel.textColor = PixelTheme.textCream
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(titleLabel)
 
         arrowLabel.text = "▸"
-        arrowLabel.font = PixelTheme.boldFont(size: 16)
+        arrowLabel.font = PixelTheme.boldFont(size: 18)
         arrowLabel.textColor = PixelTheme.accentAmber
         arrowLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(arrowLabel)
@@ -141,7 +149,12 @@ private final class PixelMenuCell: UITableViewCell {
             cardBg.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
             cardBg.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -3),
 
-            titleLabel.leadingAnchor.constraint(equalTo: cardBg.leadingAnchor, constant: 16),
+            iconView.leadingAnchor.constraint(equalTo: cardBg.leadingAnchor, constant: 14),
+            iconView.centerYAnchor.constraint(equalTo: cardBg.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 22),
+            iconView.heightAnchor.constraint(equalToConstant: 22),
+
+            titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 10),
             titleLabel.centerYAnchor.constraint(equalTo: cardBg.centerYAnchor),
 
             arrowLabel.trailingAnchor.constraint(equalTo: cardBg.trailingAnchor, constant: -16),
@@ -151,8 +164,15 @@ private final class PixelMenuCell: UITableViewCell {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(title: String) {
+    func configure(title: String, iconName: String?) {
         titleLabel.text = title
+        if let iconName, let image = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+            iconView.image = image
+            iconView.isHidden = false
+        } else {
+            iconView.image = nil
+            iconView.isHidden = true
+        }
     }
 
     override func setHighlighted(_ highlighted: Bool, animated: Bool) {

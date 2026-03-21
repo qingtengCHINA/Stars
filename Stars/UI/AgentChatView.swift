@@ -81,13 +81,13 @@ final class AgentChatView: UIView {
         headerInnerBorder.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(headerInnerBorder)
 
-        titleLabel.font = PixelTheme.headerFont(size: 15)
+        titleLabel.font = PixelTheme.headerFont(size: 18)
         titleLabel.textColor = PixelTheme.textGold
         titleLabel.lineBreakMode = .byTruncatingTail
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
         closeButton.setTitle("✕", for: .normal)
-        closeButton.titleLabel?.font = PixelTheme.boldFont(size: 16)
+        closeButton.titleLabel?.font = PixelTheme.boldFont(size: 18)
         closeButton.tintColor = PixelTheme.textTan
         closeButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
@@ -157,8 +157,8 @@ final class AgentChatView: UIView {
         addSubview(chatTableView)
 
         // -- Detail toggle --
-        detailToggle.setTitle("▶ 日志 · 记忆 · 思维", for: .normal)
-        detailToggle.titleLabel?.font = PixelTheme.boldFont(size: 10)
+        detailToggle.setTitle(NSLocalizedString("chat.detail_collapsed", comment: ""), for: .normal)
+        detailToggle.titleLabel?.font = PixelTheme.boldFont(size: 12)
         detailToggle.tintColor = PixelTheme.textTan
         detailToggle.contentHorizontalAlignment = .left
         detailToggle.addTarget(self, action: #selector(toggleDetail), for: .touchUpInside)
@@ -169,7 +169,7 @@ final class AgentChatView: UIView {
         detailView.translatesAutoresizingMaskIntoConstraints = false
         detailView.backgroundColor = PixelTheme.bgInput
         detailView.textColor = PixelTheme.textTan
-        detailView.font = PixelTheme.bodyFont(size: 10)
+        detailView.font = PixelTheme.bodyFont(size: 12)
         detailView.layer.cornerRadius = PixelTheme.cornerRadius
         detailView.layer.borderWidth = PixelTheme.borderWidth
         detailView.layer.borderColor = PixelTheme.borderDark.cgColor
@@ -191,11 +191,11 @@ final class AgentChatView: UIView {
         inputContainer.addSubview(inputBorder)
 
         inputField.translatesAutoresizingMaskIntoConstraints = false
-        inputField.font = PixelTheme.bodyFont(size: 13)
+        inputField.font = PixelTheme.bodyFont(size: 16)
         inputField.textColor = PixelTheme.textCream
         inputField.backgroundColor = PixelTheme.bgInput
         inputField.attributedPlaceholder = NSAttributedString(
-            string: "对 Agent 说话...",
+            string: NSLocalizedString("chat.input_placeholder", comment: ""),
             attributes: [.foregroundColor: PixelTheme.textMuted]
         )
         inputField.layer.cornerRadius = PixelTheme.cornerRadius
@@ -213,7 +213,7 @@ final class AgentChatView: UIView {
         inputContainer.addSubview(inputField)
 
         sendButton.setTitle("📨", for: .normal)
-        sendButton.titleLabel?.font = .systemFont(ofSize: 20)
+        sendButton.titleLabel?.font = PixelTheme.headerFont(size: 20)
         sendButton.addTarget(self, action: #selector(sendMessage), for: .touchUpInside)
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         inputContainer.addSubview(sendButton)
@@ -317,7 +317,7 @@ final class AgentChatView: UIView {
         isDetailExpanded.toggle()
         detailView.isHidden = !isDetailExpanded
         detailHeightConstraint.constant = isDetailExpanded ? 140 : 0
-        detailToggle.setTitle(isDetailExpanded ? "▼ 日志 · 记忆 · 思维" : "▶ 日志 · 记忆 · 思维", for: .normal)
+        detailToggle.setTitle(isDetailExpanded ? NSLocalizedString("chat.detail_expanded", comment: "") : NSLocalizedString("chat.detail_collapsed", comment: ""), for: .normal)
         UIView.animate(withDuration: 0.2) {
             self.layoutIfNeeded()
         }
@@ -327,24 +327,24 @@ final class AgentChatView: UIView {
 
     private func refresh() {
         guard let agent else {
-            titleLabel.text = "Agent 不存在"
+            titleLabel.text = NSLocalizedString("chat.agent_missing", comment: "")
             return
         }
 
         // -- Real-time Stats --
         let hpRatio = Double(agent.hp) / Double(agent.maxHP)
-        hpLabel.text = "❤️ \(agent.hp)/\(agent.maxHP)"
+        hpLabel.text = "❤️ \(agent.hp)/\(agent.maxHP) ⭐\(agent.stars)"
         hpLabel.textColor = hpRatio > 0.5 ? PixelTheme.hpHigh : (hpRatio > 0.25 ? PixelTheme.hpMid : PixelTheme.hpLow)
 
         posLabel.text = "📍(\(agent.tileX),\(agent.tileY))"
-        actionLabel.text = agent.isDead ? "💀 已死亡" : "⚡ \(agent.currentAction.rawValue)"
+        actionLabel.text = agent.isDead ? NSLocalizedString("chat.dead", comment: "") : "⚡ \(agent.currentAction.rawValue)"
 
         if let usage = agent.latestContextUsage {
             let ratio = usage.usageRatio
             ctxLabel.text = "🧠 \(usage.usedTokens)/\(usage.limitTokens) (\(usage.percentageText))"
             ctxLabel.textColor = ratio > 0.8 ? PixelTheme.hpLow : (ratio > 0.6 ? PixelTheme.hpMid : PixelTheme.accentBlue)
         } else {
-            ctxLabel.text = "🧠 等待首次思考"
+            ctxLabel.text = NSLocalizedString("chat.waiting", comment: "")
             ctxLabel.textColor = PixelTheme.textMuted
         }
 
@@ -362,7 +362,7 @@ final class AgentChatView: UIView {
         for msg in agent.chatMessages.suffix(30) {
             switch msg.speaker {
             case .owner:
-                newEntries.append(("主人", msg.text))
+                newEntries.append((NSLocalizedString("chat.owner", comment: ""), msg.text))
             case .agent:
                 newEntries.append((agent.displayName, msg.text))
             case .system:
@@ -371,7 +371,7 @@ final class AgentChatView: UIView {
         }
 
         if agent.pendingOwnerReplies > 0 {
-            newEntries.append(("···", "\(agent.displayName) 正在思考..."))
+            newEntries.append(("···", String(format: NSLocalizedString("chat.thinking", comment: ""), agent.displayName)))
         }
 
         let needsReload = newEntries.count != chatEntries.count
@@ -390,13 +390,13 @@ final class AgentChatView: UIView {
         var lines = [String]()
 
         if let thought = agent.currentThought, !thought.isEmpty {
-            lines.append("💭 当前想法: \(thought)")
+            lines.append(String(format: NSLocalizedString("chat.thought", comment: ""), thought))
             lines.append("")
         }
 
         let memories = agent.memory.recentEntries(count: 6)
         if !memories.isEmpty {
-            lines.append("── 短期记忆 (\(memories.count)条) ──")
+            lines.append(String(format: NSLocalizedString("chat.short_memory", comment: ""), memories.count))
             for m in memories {
                 lines.append("  [\(m.type.rawValue)] \(m.content)")
             }
@@ -405,7 +405,7 @@ final class AgentChatView: UIView {
         let ltmCount = LongTermMemory.shared.entries(for: agent.entityID).count
         if ltmCount > 0 {
             lines.append("")
-            lines.append("── 长期记忆: \(ltmCount)条 ──")
+            lines.append(String(format: NSLocalizedString("chat.long_memory", comment: ""), ltmCount))
             let topEntries = LongTermMemory.shared.topEntries(for: agent.entityID, count: 3)
             for e in topEntries {
                 lines.append("  [\(e.category.rawValue)] \(e.content)")
@@ -415,7 +415,7 @@ final class AgentChatView: UIView {
         let events = WorldEventLogStore.shared.recentEvents(limit: 4, entityID: agent.entityID)
         if !events.isEmpty {
             lines.append("")
-            lines.append("── 系统日志 ──")
+            lines.append(NSLocalizedString("chat.system_log", comment: ""))
             for e in events {
                 lines.append("  [\(e.category.rawValue)] \(e.title): \(e.message)")
             }
@@ -441,7 +441,7 @@ extension AgentChatView: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "chat", for: indexPath) as! ChatBubbleCell
         let entry = chatEntries[indexPath.row]
-        let isOwner = entry.role == "主人"
+        let isOwner = entry.role == NSLocalizedString("chat.owner", comment: "")
         cell.configure(role: entry.role, text: entry.text, isOwner: isOwner)
         return cell
     }
@@ -468,7 +468,7 @@ private final class ChatBubbleCell: UITableViewCell {
         backgroundColor = .clear
         selectionStyle = .none
 
-        roleLabel.font = PixelTheme.boldFont(size: 10)
+        roleLabel.font = PixelTheme.boldFont(size: 12)
         roleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(roleLabel)
 
@@ -477,7 +477,7 @@ private final class ChatBubbleCell: UITableViewCell {
         bubbleBg.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(bubbleBg)
 
-        bubbleLabel.font = PixelTheme.bodyFont(size: 12)
+        bubbleLabel.font = PixelTheme.bodyFont(size: 14)
         bubbleLabel.numberOfLines = 0
         bubbleLabel.translatesAutoresizingMaskIntoConstraints = false
         bubbleBg.addSubview(bubbleLabel)

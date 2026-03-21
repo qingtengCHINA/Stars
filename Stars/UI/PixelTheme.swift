@@ -57,35 +57,43 @@ enum PixelTheme {
     static let statusUnknown = UIColor(red: 0.50, green: 0.42, blue: 0.30, alpha: 1)
 
     // ─────────────────────────────────────
-    // MARK: - Typography
+    // MARK: - Typography (Fusion Pixel 12px)
     // ─────────────────────────────────────
 
-    /// Rustic header font — warm and characterful
+    // PostScript names — registered in Info.plist via UIAppFonts
+    private static let propFontName = "Fusion-Pixel-12px-Prop-zh_hans-Regular"
+    private static let monoFontName = "Fusion-Pixel-12px-Mono-zh_hans-Regular"
+
+    /// Header / title font — proportional pixel font, used for headings & labels
     static func headerFont(size: CGFloat) -> UIFont {
-        UIFont(name: "AmericanTypewriter-Bold", size: size)
+        UIFont(name: propFontName, size: size)
             ?? .systemFont(ofSize: size, weight: .bold)
     }
 
-    /// Pixel-game body font — monospace for that retro feel
+    /// Body font — proportional pixel font, for readable text
     static func bodyFont(size: CGFloat) -> UIFont {
-        UIFont(name: "Menlo", size: size)
-            ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+        UIFont(name: propFontName, size: size)
+            ?? .systemFont(ofSize: size, weight: .regular)
     }
 
-    /// Bold monospace
+    /// Bold / monospaced pixel font — for stats, code-like displays
     static func boldFont(size: CGFloat) -> UIFont {
-        UIFont(name: "Menlo-Bold", size: size)
+        UIFont(name: monoFontName, size: size)
             ?? .monospacedSystemFont(ofSize: size, weight: .bold)
     }
 
-    // Convenient presets
-    static let fontTitle      = headerFont(size: 18)
-    static let fontSubtitle   = headerFont(size: 15)
-    static let fontSection    = boldFont(size: 13)
-    static let fontBody       = bodyFont(size: 13)
-    static let fontSmall      = bodyFont(size: 11)
-    static let fontMicro      = bodyFont(size: 9)
-    static let fontStats      = boldFont(size: 10)
+    /// SpriteKit font name (use with SKLabelNode.fontName)
+    static let skFontName = propFontName
+    static let skMonoFontName = monoFontName
+
+    // Convenient presets — bumped sizes for pixel font readability
+    static let fontTitle      = headerFont(size: 24)
+    static let fontSubtitle   = headerFont(size: 18)
+    static let fontSection    = boldFont(size: 16)
+    static let fontBody       = bodyFont(size: 16)
+    static let fontSmall      = bodyFont(size: 14)
+    static let fontMicro      = bodyFont(size: 12)
+    static let fontStats      = boldFont(size: 12)
 
     // ─────────────────────────────────────
     // MARK: - Layout Constants
@@ -132,7 +140,7 @@ enum PixelTheme {
         button.layer.borderWidth = borderWidth
         button.layer.borderColor = color.withAlphaComponent(0.5).cgColor
         button.layer.cornerRadius = cornerRadius
-        button.titleLabel?.font = boldFont(size: 14)
+        button.titleLabel?.font = boldFont(size: 16)
         button.setTitleColor(textWhite, for: .normal)
     }
 
@@ -142,7 +150,7 @@ enum PixelTheme {
         button.layer.borderWidth = borderWidth
         button.layer.borderColor = color.cgColor
         button.layer.cornerRadius = cornerRadius
-        button.titleLabel?.font = boldFont(size: 13)
+        button.titleLabel?.font = boldFont(size: 16)
         button.setTitleColor(textCream, for: .normal)
     }
 
@@ -153,11 +161,11 @@ enum PixelTheme {
         appearance.backgroundColor = bgMedium
         appearance.titleTextAttributes = [
             .foregroundColor: textGold,
-            .font: headerFont(size: 17)
+            .font: headerFont(size: 20)
         ]
         appearance.largeTitleTextAttributes = [
             .foregroundColor: textGold,
-            .font: headerFont(size: 22)
+            .font: headerFont(size: 26)
         ]
         navBar.standardAppearance = appearance
         navBar.scrollEdgeAppearance = appearance
@@ -199,7 +207,7 @@ enum PixelTheme {
         let tv = UITextView()
         tv.backgroundColor = bgInput
         tv.textColor = textCream
-        tv.font = bodyFont(size: 13)
+        tv.font = bodyFont(size: 16)
         tv.tintColor = accentAmber
         tv.layer.borderWidth = borderWidth
         tv.layer.borderColor = borderDark.cgColor
@@ -207,4 +215,5 @@ enum PixelTheme {
         tv.textContainerInset = UIEdgeInsets(top: 8, left: 6, bottom: 8, right: 6)
         return tv
     }
+
 }

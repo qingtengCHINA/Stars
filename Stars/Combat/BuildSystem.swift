@@ -28,8 +28,8 @@ final class BuildSystem {
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: builder.entityID,
-                title: "建造失败",
-                message: "目标 (\(tileX), \(tileY)) 超出建造范围。"
+                title: NSLocalizedString("log.build_failed", comment: ""),
+                message: String(format: NSLocalizedString("log.build_fail_range", comment: ""), tileX, tileY)
             )
             return nil
         }
@@ -38,8 +38,8 @@ final class BuildSystem {
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: builder.entityID,
-                title: "建造失败",
-                message: "目标 (\(tileX), \(tileY)) 地形不允许建造。"
+                title: NSLocalizedString("log.build_failed", comment: ""),
+                message: String(format: NSLocalizedString("log.build_fail_terrain", comment: ""), tileX, tileY)
             )
             return nil
         }
@@ -48,8 +48,8 @@ final class BuildSystem {
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: builder.entityID,
-                title: "建造失败",
-                message: "目标 (\(tileX), \(tileY)) 已被占用。"
+                title: NSLocalizedString("log.build_failed", comment: ""),
+                message: String(format: NSLocalizedString("log.build_fail_occupied", comment: ""), tileX, tileY)
             )
             return nil
         }
@@ -68,7 +68,8 @@ final class BuildSystem {
                 tileX: snapshot.tileX,
                 tileY: snapshot.tileY,
                 entityID: snapshot.entityID,
-                startingHP: snapshot.hp
+                startingHP: snapshot.hp,
+                ownerID: snapshot.ownerID
             )
             worldNode?.addChild(structure)
             structures.append(structure)
@@ -88,7 +89,7 @@ final class BuildSystem {
 
     private func createStructure(type: StructureType, tileX: Int, tileY: Int,
                                  builder: Agent?) -> Structure? {
-        let structure = Structure(type: type, tileX: tileX, tileY: tileY)
+        let structure = Structure(type: type, tileX: tileX, tileY: tileY, ownerID: builder?.entityID)
         worldNode?.addChild(structure)
         structures.append(structure)
 
@@ -101,8 +102,8 @@ final class BuildSystem {
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: builder.entityID,
-                title: "完成建造",
-                message: "在 (\(tileX), \(tileY)) 放置了 \(type.rawValue)。"
+                title: NSLocalizedString("log.build_complete", comment: ""),
+                message: String(format: NSLocalizedString("log.build_complete_msg", comment: ""), tileX, tileY, type.rawValue)
             )
         }
         IncrementalArchiveStore.shared.recordStructure(structure, reason: "structure-created")
@@ -124,8 +125,8 @@ final class BuildSystem {
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: structure.entityID,
-                title: "结构损毁",
-                message: "\(structure.structureType.rawValue) 已损毁。"
+                title: NSLocalizedString("log.structure_destroyed", comment: ""),
+                message: String(format: NSLocalizedString("log.structure_destroyed_msg", comment: ""), structure.structureType.rawValue)
             )
         }
         structures.removeAll { $0.hp <= 0 || $0.parent == nil }
@@ -148,13 +149,25 @@ final class BuildSystem {
             let sx = Int(floor(s.position.x / Chunk.tileSize))
             let sy = Int(floor(s.position.y / Chunk.tileSize))
             guard abs(sx - cx) <= tileRadius && abs(sy - cy) <= tileRadius else { return nil }
+            let ownerSuffix = s.ownerID.map { " owner:\($0.prefix(8))" } ?? ""
             return EntityInfo(
                 id: s.entityID,
                 type: s.structureType.rawValue,
-                name: "\(s.structureType.rawValue) (HP:\(s.hp)/\(s.maxHP))",
+                name: "\(s.structureType.rawValue) (HP:\(s.hp)/\(s.maxHP))\(ownerSuffix)",
                 tileX: sx,
                 tileY: sy
             )
+        }
+    }
+
+    /// Returns true if the agent is standing on their own house tile.
+    func isAgentInOwnHouse(_ agent: Agent) -> Bool {
+        structures.contains { s in
+            s.structureType == .house &&
+            s.ownerID == agent.entityID &&
+            s.hp > 0 &&
+            Int(floor(s.position.x / Chunk.tileSize)) == agent.tileX &&
+            Int(floor(s.position.y / Chunk.tileSize)) == agent.tileY
         }
     }
 

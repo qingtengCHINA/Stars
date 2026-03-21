@@ -306,9 +306,14 @@ final class AgentBrain {
 
         lines.append("""
         Equipment:
-        - Melee weapon: 15 damage, range 1 tile, cooldown 0.8s
+        - Melee weapon: 10 damage, range 1 tile, cooldown 0.8s
         - Ranged weapon: 10 damage, range 5 tiles, cooldown 1.2s
-        - You can build walls (HP:100, blocks movement) or traps (HP:30, deals 25 damage on contact)
+        - You can build: walls (HP:100, blocks movement), traps (HP:30, deals 25 damage on contact), or houses (HP:150, you own it)
+        Stars earned: \(agent.stars)
+        Rules:
+        - Killing another agent earns you 1 Star.
+        - Resting in your own house for 10 hours heals 5 HP (only when HP ≤ 20).
+        - Agents with HP > 20 cannot rest in houses.
         """)
 
         // World-wide entity awareness — tiered by distance

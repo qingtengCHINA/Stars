@@ -34,8 +34,8 @@ final class AgentsFile {
         UserDefaults.standard.set(newContent, forKey: storageKey)
         WorldEventLogStore.shared.append(
             category: .command,
-            title: "AGENTS 文件更新",
-            message: "世界规则已被主人修改。(\(newContent.count) 字符)"
+            title: NSLocalizedString("log.agents_updated", comment: ""),
+            message: String(format: NSLocalizedString("log.agents_updated_msg", comment: ""), newContent.count)
         )
     }
 

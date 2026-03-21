@@ -41,6 +41,11 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>fusion-pixel-12px-proportional-zh_hans.ttf</string>
+		<string>fusion-pixel-12px-monospaced-zh_hans.ttf</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

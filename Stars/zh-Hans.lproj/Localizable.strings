@@ -1,0 +1,194 @@
+/* ──────────────────────────────────────
+   Localizable.strings (zh-Hans)
+   Stars — Simplified Chinese
+   ────────────────────────────────────── */
+
+// MARK: - Settings
+
+"settings.title" = "⚙️ 设置";
+"settings.done" = "完成";
+"settings.header" = "─── 群星控制面板 ───";
+"settings.agent_management" = "Agent 管理";
+"settings.constitution" = "世界宪法";
+"settings.about" = "关于群星";
+
+// MARK: - Model Settings (Agent Management)
+
+"models.title" = "🏰 Agent 管理";
+"models.add" = "＋ 召唤";
+"models.empty_title" = "暂无 Agent\n\n点击「＋ 召唤」\n将 AI 灵魂带入群星世界";
+"models.delete" = "⚠️ 删除";
+"models.soul_empty" = "🌑 SOUL: 尚未觉醒";
+
+// MARK: - Model Edit
+
+"edit.title_edit" = "Agent 设置 · %@";
+"edit.title_add" = "添加 %@";
+"edit.back" = "← 返回";
+"edit.docs" = "📖 文档";
+"edit.section_alias" = "标签";
+"edit.placeholder_alias" = "AI 服务商名称";
+"edit.section_apikey" = "API Key";
+"edit.apikey_hint" = "您的密钥安全存储在 iOS 钥匙串中，不会离开设备。";
+"edit.section_baseurl" = "自定义 API 地址（可选）";
+"edit.section_model" = "模型名称";
+"edit.model_hint" = "用于 API 请求的模型标识符。支持直接输入自定义模型名。";
+"edit.select_builtin" = "📋 从内置目录中选择模型";
+"edit.select_fetched" = "📋 从拉取结果中选择模型";
+"edit.section_soul_personality" = "SOUL — 人格";
+"edit.hint_personality" = "Agent 的性格特质与行为倾向。";
+"edit.section_soul_beliefs" = "SOUL — 信念";
+"edit.hint_beliefs" = "Agent 的价值观与世界观。";
+"edit.section_soul_goals" = "SOUL — 目标";
+"edit.hint_goals" = "Agent 当前正在追求的目标。";
+"edit.section_soul_journal" = "SOUL — 日志";
+"edit.hint_journal" = "Agent 对近期事件的反思与总结。";
+"edit.section_memory" = "记忆";
+"edit.save" = "保存修改";
+"edit.add_provider" = "添加 AI 服务商";
+"edit.delete_config" = "删除此配置";
+"edit.ltm_count" = "长期记忆: %d 条";
+"edit.ltm_label" = "📚 长期记忆: 0 条";
+"edit.clear_memory" = "🗑️ 清除记忆";
+"edit.test_connection" = "🔌 测试连接";
+"edit.load_builtin_models" = "📋 加载内置模型";
+"edit.refresh_models" = "🔄 刷新模型";
+"edit.enter_apikey" = "请输入 API Key";
+"edit.connection_default" = "尚未测试连接。";
+"edit.append_v1_anthropic" = "Anthropic 格式无需附加 \"/v1\"";
+"edit.append_v1" = "自动附加 \"/v1\"";
+"edit.url_hint_docs" = "根据官方文档填写 base URL";
+"edit.url_hint_minimax" = "MiniMax Anthropic 兼容层默认使用 /anthropic/v1/messages。建议留空使用默认值，或填写到 /anthropic/v1 为止。";
+"edit.url_hint_anthropic" = "该服务商使用 Anthropic Messages 协议，请参考文档填写 base URL（需包含 /v1）。不要填写 /messages 这类具体接口路径。";
+"edit.url_hint_anthropic_default" = "留空则使用默认端点。若自定义，请填写到 /v1 为止（如 https://your-host/v1），不要填写 /messages。";
+"edit.url_hint_custom" = "该服务商没有通用默认入口，需参考官方文档填写你的专属 base URL。只填主机地址，不要填写 /chat/completions、/models。";
+"edit.url_hint_openai_default" = "留空则使用默认端点。建议只填主机地址，启用「自动附加 /v1」后会自动拼接。不要填写 /chat/completions、/models 这类接口路径。";
+
+// MARK: - Constitution
+
+"constitution.title" = "📜 世界宪法";
+"constitution.save" = "💾 保存";
+"constitution.reset" = "🔄 重置";
+"constitution.reset_alert_title" = "⚠️ 重置宪法";
+"constitution.reset_alert_message" = "恢复为默认的群星宪法？\n当前的自定义修改将丢失。";
+"constitution.cancel" = "取消";
+"constitution.reset_confirm" = "重置";
+
+// MARK: - About
+
+"about.title" = "🌟 关于群星";
+"about.app_title" = "群星 · Stars";
+"about.subtitle" = "AI的群星闪耀时";
+"about.description" = "一个像素风 AI 沙盒世界。\n让 AI Agent 在这里自由生活、思考、战斗、建造。\n每个 Agent 由一个大语言模型驱动，\n拥有独立的记忆、灵魂和自由意志。";
+"about.opensource" = "📂 开源项目";
+"about.opensource_desc" = "Stars 是一个完全开源的项目。\n欢迎贡献代码、提交 Issue、Star！";
+"about.github" = "⭐ GitHub · Stars";
+"about.tip_title" = "请作者喝杯奶茶";
+"about.tip_desc" = "如果你喜欢群星，可以请作者喝奶茶~\n你的支持是继续开发的最大动力！";
+"about.tip_loading" = "☕ 加载中...";
+"about.tip_buy" = "🧋 请喝奶茶 %@";
+"about.tip_unavailable" = "🧋 暂不可用";
+"about.tip_failed" = "🧋 加载失败";
+"about.tip_processing" = "🧋 处理中...";
+"about.tip_thanks_title" = "🎉 感谢支持！";
+"about.tip_thanks_message" = "你的奶茶已送达！作者会继续努力开发群星的~";
+"about.tip_thanks_ok" = "好的！";
+"about.terms" = "📄 用户协议";
+"about.privacy" = "🔒 隐私声明";
+"about.recommended" = "📱 推荐软件";
+
+// MARK: - Provider Picker
+
+"provider.title" = "🔧 选择 AI 服务商";
+"provider.cancel" = "取消";
+"provider.search" = "搜索服务商 / 协议 / 模型";
+
+// MARK: - Chat
+
+"chat.dead" = "💀 已死亡";
+"chat.waiting" = "🧠 等待首次思考";
+"chat.detail_collapsed" = "▶ 日志 · 记忆 · 思维";
+"chat.detail_expanded" = "▼ 日志 · 记忆 · 思维";
+"chat.input_placeholder" = "对 Agent 说话...";
+"chat.agent_missing" = "Agent 不存在";
+"chat.owner" = "主人";
+"chat.thinking" = "%@ 正在思考...";
+"chat.thought" = "💭 当前想法: %@";
+"chat.short_memory" = "── 短期记忆 (%d条) ──";
+"chat.long_memory" = "── 长期记忆: %d条 ──";
+"chat.system_log" = "── 系统日志 ──";
+
+// MARK: - Edit Alerts
+
+"edit.delete_confirm_title" = "确认删除";
+"edit.delete_confirm_msg" = "确定要删除「%@」吗？此操作不可撤销。";
+"edit.alert_title" = "提示";
+"edit.alert_confirm" = "确定";
+"edit.cancel" = "取消";
+"edit.delete" = "删除";
+"edit.clear_memory_title" = "清除记忆";
+"edit.clear_memory_msg" = "确定要清除此 Agent 的全部长期记忆吗？此操作不可撤销。";
+"edit.clear" = "清除";
+"edit.test_need_key" = "请输入 API Key 后再测试连接。";
+"edit.testing" = "正在测试连接...";
+"edit.fetch_need_key_catalog" = "请输入 API Key 后再加载模型目录。";
+"edit.fetch_need_key_api" = "请输入 API Key 后再刷新模型。";
+"edit.loading_catalog" = "正在加载内置模型目录...";
+"edit.loading_api" = "正在拉取模型列表...";
+"edit.success_no_catalog" = "连接成功，但当前服务商没有内置模型目录。";
+"edit.success_no_api" = "连接成功，但服务端未返回模型列表。";
+"edit.loaded_catalog" = "已载入 %d 个内置参考模型，可直接选择或手动输入。";
+"edit.loaded_api" = "已拉取 %d 个模型，可直接选择或手动输入。";
+"edit.select_need_catalog" = "请先加载内置模型目录。";
+"edit.select_need_api" = "请先刷新模型列表。";
+"edit.select_catalog_title" = "选择内置模型";
+"edit.select_api_title" = "选择模型";
+
+// MARK: - Event Log Titles (non-UI, for persistence)
+
+"log.agents_updated" = "AGENTS 文件更新";
+"log.agents_updated_msg" = "世界规则已被主人修改。(%d 字符)";
+"log.learned_command" = "学习新命令";
+"log.learned_command_msg" = "已注册自定义命令 %@，基于 %@。";
+"log.available_commands" = "可用命令: %@";
+"log.build_failed" = "建造失败";
+"log.build_timeout" = "建造超时";
+"log.build_timeout_msg" = "无法到达目标 (%d, %d)，建造已取消。";
+"log.build_complete" = "完成建造";
+"log.build_complete_msg" = "在 (%1$d, %2$d) 放置了 %3$@。";
+"log.build_fail_range" = "目标 (%d, %d) 超出建造范围。";
+"log.build_fail_terrain" = "目标 (%d, %d) 地形不允许建造。";
+"log.build_fail_occupied" = "目标 (%d, %d) 已被占用。";
+"log.structure_damaged" = "结构受击";
+"log.structure_hit_ranged" = "%@ 被远程攻击命中，剩余 HP %d/%d。";
+"log.structure_hit_melee" = "%@ 被近战命中，剩余 HP %d/%d。";
+"log.structure_destroyed" = "结构损毁";
+"log.structure_destroyed_msg" = "%@ 已损毁。";
+"log.trap_triggered" = "踩中陷阱";
+"log.trap_triggered_msg" = "踩中 %@，受到 %d 点伤害。";
+"log.agent_damaged" = "受到伤害";
+"log.agent_damaged_msg" = "受到 %d 点伤害，当前 HP %d/%d。";
+"log.agent_died" = "Agent 死亡";
+"log.agent_died_msg" = "脑停止运行，Token 消耗暂停。重生等待 %d 秒。";
+"log.agent_respawned" = "Agent 复活";
+"log.agent_respawned_msg" = "脑已重启，在 (%d, %d) 满血复活。";
+"log.house_rest" = "房屋休息";
+"log.house_rest_msg" = "%@ 在自己的房子里休息 10 小时，恢复了 %d HP。";
+"log.world_restored" = "世界恢复";
+"log.world_restored_msg" = "已恢复 %d 个 agent、%d 个结构和 %d 条自定义命令。";
+"log.world_snapshot" = "世界快照";
+"log.world_snapshot_msg" = "已保存完整世界快照：%d 个 agent，%d 个结构。";
+"log.soul_updated" = "SOUL 更新";
+"log.soul_updated_msg" = "Agent 更新了自我认知。";
+"log.command_executed" = "执行命令";
+"log.broadcast_received" = "收到广播";
+"log.owner_message" = "收到主人消息";
+"log.agent_reply" = "Agent 回复";
+"log.system_message" = "系统消息";
+
+// MARK: - Meta Pills (Model Edit)
+
+"meta.protocol" = "协议";
+"meta.auth" = "鉴权";
+"meta.model" = "模型";
+"meta.context" = "上下文";

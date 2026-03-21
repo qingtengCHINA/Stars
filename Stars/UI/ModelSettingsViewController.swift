@@ -14,7 +14,7 @@ final class ModelSettingsViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "🏰 Agent 管理"
+        title = NSLocalizedString("models.title", comment: "")
         overrideUserInterfaceStyle = .dark
 
         if let navBar = navigationController?.navigationBar {
@@ -22,7 +22,7 @@ final class ModelSettingsViewController: UITableViewController {
         }
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "＋ 召唤",
+            title: NSLocalizedString("models.add", comment: ""),
             style: .plain,
             target: self,
             action: #selector(addModel)
@@ -77,11 +77,11 @@ final class ModelSettingsViewController: UITableViewController {
             iconLabel.translatesAutoresizingMaskIntoConstraints = false
 
             let textLabel = UILabel()
-            textLabel.text = "暂无 Agent\n\n点击「＋ 召唤」\n将 AI 灵魂带入群星世界"
+            textLabel.text = NSLocalizedString("models.empty_title", comment: "")
             textLabel.numberOfLines = 0
             textLabel.textAlignment = .center
             textLabel.textColor = PixelTheme.textTan
-            textLabel.font = PixelTheme.headerFont(size: 14)
+            textLabel.font = PixelTheme.headerFont(size: 16)
             textLabel.translatesAutoresizingMaskIntoConstraints = false
 
             container.addSubview(iconLabel)
@@ -139,7 +139,7 @@ final class ModelSettingsViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView,
                             titleForDeleteConfirmationButtonForRowAt indexPath: IndexPath) -> String? {
-        "⚠️ 删除"
+        NSLocalizedString("models.delete", comment: "")
     }
 }
 
@@ -170,24 +170,24 @@ private final class AgentListCell: UITableViewCell {
         statusDot.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(statusDot)
 
-        nameLabel.font = PixelTheme.headerFont(size: 16)
+        nameLabel.font = PixelTheme.headerFont(size: 18)
         nameLabel.textColor = PixelTheme.textCream
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(nameLabel)
 
-        modelLabel.font = PixelTheme.bodyFont(size: 11)
+        modelLabel.font = PixelTheme.bodyFont(size: 14)
         modelLabel.textColor = PixelTheme.textTan
         modelLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(modelLabel)
 
-        soulLabel.font = PixelTheme.bodyFont(size: 10)
+        soulLabel.font = PixelTheme.bodyFont(size: 12)
         soulLabel.textColor = PixelTheme.accentAmber.withAlphaComponent(0.7)
         soulLabel.numberOfLines = 1
         soulLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(soulLabel)
 
         arrowLabel.text = "▸"
-        arrowLabel.font = PixelTheme.boldFont(size: 16)
+        arrowLabel.font = PixelTheme.boldFont(size: 18)
         arrowLabel.textColor = PixelTheme.accentAmber
         arrowLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(arrowLabel)
@@ -228,7 +228,7 @@ private final class AgentListCell: UITableViewCell {
         modelLabel.text = "\(config.provider.displayName) · \(config.modelName)"
 
         if soul.isEmpty {
-            soulLabel.text = "🌑 SOUL: 尚未觉醒"
+            soulLabel.text = NSLocalizedString("models.soul_empty", comment: "")
         } else {
             soulLabel.text = "✨ SOUL: \(soul.personality.prefix(36))"
         }

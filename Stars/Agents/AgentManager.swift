@@ -71,6 +71,9 @@ final class AgentManager {
             let rightIndex = configs.firstIndex(where: { $0.id == rhs.representedModelConfigID }) ?? Int.max
             return leftIndex < rightIndex
         }
+
+        // Report to Game Center
+        GameCenterManager.shared.reportAgentCount(agents.count)
     }
 
     func restoreAgents(from snapshots: [AgentSnapshot]) {
@@ -97,12 +100,17 @@ final class AgentManager {
                 shortTermMessages: snapshot.shortTermMessages,
                 forceNextThink: snapshot.forceNextThink,
                 pendingOwnerReplies: snapshot.pendingOwnerReplies,
-                respawnRemaining: snapshot.respawnRemaining
+                respawnRemaining: snapshot.respawnRemaining,
+                stars: snapshot.stars,
+                houseRestAccumulator: snapshot.houseRestAccumulator
             )
             worldNode.addChild(agent)
             agents.append(agent)
             assignBrain(to: agent, configID: snapshot.modelConfigID)
         }
+
+        // Report to Game Center
+        GameCenterManager.shared.reportAgentCount(agents.count)
     }
 
     func snapshots() -> [AgentSnapshot] {
@@ -118,6 +126,7 @@ final class AgentManager {
         for agent in agents {
             agent.update(deltaTime: dt)
             processPendingBuild(for: agent)
+            processHouseResting(for: agent, dt: dt)
         }
 
         // Clean up destroyed structures
@@ -160,10 +169,52 @@ final class AgentManager {
                 WorldEventLogStore.shared.append(
                     category: .build,
                     entityID: agent.entityID,
-                    title: "建造超时",
-                    message: "无法到达目标 (\(build.tileX), \(build.tileY))，建造已取消。"
+                    title: NSLocalizedString("log.build_timeout", comment: ""),
+                    message: String(format: NSLocalizedString("log.build_timeout_msg", comment: ""), build.tileX, build.tileY)
                 )
             }
+        }
+    }
+
+    // MARK: - House Resting
+
+    /// 10 real hours (36000s) resting in own house → +5 HP.  HP > 20 → cannot rest.
+    private static let houseRestThreshold: TimeInterval = 36000  // 10 hours
+    private static let houseHealAmount: Int = 5
+
+    private func processHouseResting(for agent: Agent, dt: TimeInterval) {
+        guard !agent.isDead else {
+            agent.houseRestAccumulator = 0
+            return
+        }
+
+        // HP > 20 → not allowed to rest in house
+        guard agent.hp <= 20 else {
+            if agent.houseRestAccumulator > 0 {
+                agent.houseRestAccumulator = 0
+            }
+            return
+        }
+
+        // Must be idle (no target) and on own house tile
+        guard agent.currentAction == .idle,
+              buildSystem?.isAgentInOwnHouse(agent) == true else {
+            agent.houseRestAccumulator = 0
+            return
+        }
+
+        agent.houseRestAccumulator += dt
+
+        if agent.houseRestAccumulator >= Self.houseRestThreshold {
+            agent.houseRestAccumulator = 0
+            agent.healHP(Self.houseHealAmount)
+            agent.memory.record(type: .observe, content: "Rested in my house for 10 hours. Recovered \(Self.houseHealAmount) HP (now \(agent.hp)/\(agent.maxHP)).")
+            WorldEventLogStore.shared.append(
+                category: .build,
+                entityID: agent.entityID,
+                title: NSLocalizedString("log.house_rest", comment: ""),
+                message: String(format: NSLocalizedString("log.house_rest_msg", comment: ""), agent.displayName, Self.houseHealAmount)
+            )
         }
     }
 
@@ -210,7 +261,7 @@ final class AgentManager {
             WorldEventLogStore.shared.append(
                 category: .chat,
                 entityID: agent.entityID,
-                title: "收到广播",
+                title: NSLocalizedString("log.broadcast_received", comment: ""),
                 message: "\(speaker.displayName): \(message)"
             )
         }

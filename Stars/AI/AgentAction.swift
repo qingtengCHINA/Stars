@@ -48,7 +48,7 @@ enum WeaponType: String, Codable, Sendable {
 
     var damage: Int {
         switch self {
-        case .melee:  return 15
+        case .melee:  return 10
         case .ranged: return 10
         }
     }
@@ -74,11 +74,13 @@ enum WeaponType: String, Codable, Sendable {
 enum StructureType: String, Codable, Sendable {
     case wall
     case trap
+    case house
 
     var maxHP: Int {
         switch self {
-        case .wall: return 100
-        case .trap: return 30
+        case .wall:  return 100
+        case .trap:  return 30
+        case .house: return 150
         }
     }
 
