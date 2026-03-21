@@ -160,6 +160,19 @@ final class BuildSystem {
         }
     }
 
+    /// Returns the tile coordinates of the agent's own house, or nil if none exists.
+    func findOwnHouseTile(_ agent: Agent) -> (tileX: Int, tileY: Int)? {
+        guard let house = structures.first(where: {
+            $0.structureType == .house &&
+            $0.ownerID == agent.entityID &&
+            $0.hp > 0
+        }) else { return nil }
+        return (
+            tileX: Int(floor(house.position.x / Chunk.tileSize)),
+            tileY: Int(floor(house.position.y / Chunk.tileSize))
+        )
+    }
+
     /// Returns true if the agent is standing on their own house tile.
     func isAgentInOwnHouse(_ agent: Agent) -> Bool {
         structures.contains { s in

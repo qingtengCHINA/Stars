@@ -5,7 +5,7 @@
 
 // MARK: - Settings
 
-"settings.title" = "⚙️ Settings";
+"settings.title" = "Settings";
 "settings.done" = "Done";
 "settings.header" = "─── Stars Control Panel ───";
 "settings.agent_management" = "Agent Management";
@@ -14,7 +14,7 @@
 
 // MARK: - Model Settings (Agent Management)
 
-"models.title" = "🏰 Agent Management";
+"models.title" = "Agent Management";
 "models.add" = "＋ Summon";
 "models.empty_title" = "No Agents Yet\n\nTap \"＋ Summon\"\nto bring an AI soul into Stars";
 "models.delete" = "⚠️ Delete";
@@ -66,7 +66,7 @@
 
 // MARK: - Constitution
 
-"constitution.title" = "📜 World Constitution";
+"constitution.title" = "World Constitution";
 "constitution.save" = "💾 Save";
 "constitution.reset" = "🔄 Reset";
 "constitution.reset_alert_title" = "⚠️ Reset Constitution";
@@ -76,7 +76,7 @@
 
 // MARK: - About
 
-"about.title" = "🌟 About Stars";
+"about.title" = "About Stars";
 "about.app_title" = "Stars · 群星";
 "about.subtitle" = "When AI Stars Shine";
 "about.description" = "A pixel-art AI sandbox world.\nLet AI Agents live, think, fight, and build freely here.\nEach Agent is powered by a large language model,\nwith independent memory, soul, and free will.";
@@ -117,6 +117,8 @@
 "chat.short_memory" = "── Short-term Memory (%d entries) ──";
 "chat.long_memory" = "── Long-term Memory: %d entries ──";
 "chat.system_log" = "── System Log ──";
+"chat.copy" = "Copy";
+"chat.copy_all" = "Copy All";
 
 // MARK: - Edit Alerts
 
@@ -185,6 +187,10 @@
 "log.owner_message" = "Owner Message Received";
 "log.agent_reply" = "Agent Reply";
 "log.system_message" = "System Message";
+"log.exploration_reward" = "New Area Discovered";
+"log.exploration_reward_msg" = "%@ discovered a new area and earned an exploration Star! (Total: %d)";
+"log.near_death" = "Near Death";
+"log.near_death_msg" = "%@ is critically wounded (HP: %d). Speed halved.";
 
 // MARK: - Meta Pills (Model Edit)
 

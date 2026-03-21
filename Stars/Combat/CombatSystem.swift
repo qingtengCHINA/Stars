@@ -53,6 +53,7 @@ final class CombatSystem {
 
                     if victim.isDead && !wasDead {
                         attacker.awardStar()
+                        attacker.brain?.recordSignificantEvent()  // kill → trigger SOUL reflection
                         LongTermMemory.shared.recordCombatEvent(
                             entityID: attacker.entityID,
                             content: "Killed \(victim.displayName) with a ranged attack. Earned a Star! (Total: \(attacker.stars))"
@@ -62,6 +63,7 @@ final class CombatSystem {
 
                 // Record significant damage to victim's long-term memory
                 if victim.isDead && !wasDead {
+                    victim.brain?.recordSignificantEvent()  // death → trigger SOUL reflection
                     LongTermMemory.shared.recordCombatEvent(
                         entityID: victim.entityID,
                         content: "Killed by \(attackerName)'s ranged attack. HP reached 0."
@@ -127,6 +129,7 @@ final class CombatSystem {
 
                     if victim.isDead && !wasDead {
                         attacker.awardStar()
+                        attacker.brain?.recordSignificantEvent()  // kill → trigger SOUL reflection
                         LongTermMemory.shared.recordCombatEvent(
                             entityID: attacker.entityID,
                             content: "Killed \(victim.displayName) with a melee attack. Earned a Star! (Total: \(attacker.stars))"
@@ -136,6 +139,7 @@ final class CombatSystem {
 
                 // Record kill/critical to victim's long-term memory
                 if victim.isDead && !wasDead {
+                    victim.brain?.recordSignificantEvent()  // death → trigger SOUL reflection
                     LongTermMemory.shared.recordCombatEvent(
                         entityID: victim.entityID,
                         content: "Killed by \(attackerName)'s melee attack. HP reached 0."
@@ -193,6 +197,7 @@ final class CombatSystem {
                 )
 
                 if victim.isDead && !wasDead {
+                    victim.brain?.recordSignificantEvent()  // trap death → trigger SOUL reflection
                     LongTermMemory.shared.recordCombatEvent(
                         entityID: victim.entityID,
                         content: "Killed by a trap at (\(trapTileX), \(trapTileY)). HP reached 0."

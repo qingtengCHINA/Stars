@@ -67,6 +67,11 @@ final class WorldClock {
         }
     }
 
+    /// True during night hours (19:00–05:00).
+    var isNight: Bool {
+        hour >= 19 || hour < 5
+    }
+
     /// One-line time context for agent prompts.
     var promptContext: String {
         "Current time: \(timeText) (\(periodName)), Day \(day)."
@@ -119,8 +124,18 @@ final class WorldClock {
     // MARK: - Persistence
 
     /// Restore from saved state. Uses saved totalMinutes to reconstruct the day counter.
-    func restore(totalMinutes: Double) {
+    /// If `savedAt` is provided, also adds any calendar days that elapsed between
+    /// the save date and today (fixes the "always Day 1" bug when the app restarts
+    /// across calendar day boundaries).
+    func restore(totalMinutes: Double, savedAt: Date? = nil) {
         daysSinceCreation = max(0, Int(totalMinutes / 1440.0))
+        if let savedAt {
+            let daysPassed = calendar.dateComponents([.day], from: calendar.startOfDay(for: savedAt),
+                                                      to: calendar.startOfDay(for: Date())).day ?? 0
+            if daysPassed > 0 {
+                daysSinceCreation += daysPassed
+            }
+        }
         lastKnownDate = Date()
     }
 }

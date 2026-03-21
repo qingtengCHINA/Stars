@@ -5,7 +5,7 @@
 
 // MARK: - Settings
 
-"settings.title" = "⚙️ 设置";
+"settings.title" = "设置";
 "settings.done" = "完成";
 "settings.header" = "─── 群星控制面板 ───";
 "settings.agent_management" = "Agent 管理";
@@ -14,7 +14,7 @@
 
 // MARK: - Model Settings (Agent Management)
 
-"models.title" = "🏰 Agent 管理";
+"models.title" = "Agent 管理";
 "models.add" = "＋ 召唤";
 "models.empty_title" = "暂无 Agent\n\n点击「＋ 召唤」\n将 AI 灵魂带入群星世界";
 "models.delete" = "⚠️ 删除";
@@ -66,7 +66,7 @@
 
 // MARK: - Constitution
 
-"constitution.title" = "📜 世界宪法";
+"constitution.title" = "世界宪法";
 "constitution.save" = "💾 保存";
 "constitution.reset" = "🔄 重置";
 "constitution.reset_alert_title" = "⚠️ 重置宪法";
@@ -76,7 +76,7 @@
 
 // MARK: - About
 
-"about.title" = "🌟 关于群星";
+"about.title" = "关于群星";
 "about.app_title" = "群星 · Stars";
 "about.subtitle" = "AI的群星闪耀时";
 "about.description" = "一个像素风 AI 沙盒世界。\n让 AI Agent 在这里自由生活、思考、战斗、建造。\n每个 Agent 由一个大语言模型驱动，\n拥有独立的记忆、灵魂和自由意志。";
@@ -117,6 +117,8 @@
 "chat.short_memory" = "── 短期记忆 (%d条) ──";
 "chat.long_memory" = "── 长期记忆: %d条 ──";
 "chat.system_log" = "── 系统日志 ──";
+"chat.copy" = "复制此条";
+"chat.copy_all" = "复制全部对话";
 
 // MARK: - Edit Alerts
 
@@ -185,6 +187,10 @@
 "log.owner_message" = "收到主人消息";
 "log.agent_reply" = "Agent 回复";
 "log.system_message" = "系统消息";
+"log.exploration_reward" = "发现新区域";
+"log.exploration_reward_msg" = "%@ 发现了新区域，获得一颗探索之星！（共计: %d）";
+"log.near_death" = "濒死状态";
+"log.near_death_msg" = "%@ 处于危急状态（HP: %d），速度减半。";
 
 // MARK: - Meta Pills (Model Edit)
 

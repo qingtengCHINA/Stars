@@ -68,6 +68,9 @@ final class ActionResolver {
     /// Set by AgentManager to broadcast talk messages to nearby agents.
     static var talkBroadcast: ((Agent, String) -> Void)?
 
+    /// Set by AgentManager to look up the agent's own house tile coordinates.
+    static var findOwnHouse: ((Agent) -> (tileX: Int, tileY: Int)?)?
+
     // MARK: - Action Execution
 
     /// Apply an LLMResponse to the given agent.
@@ -92,6 +95,53 @@ final class ActionResolver {
         let replyText = (trimmedSpeech?.isEmpty == false)
             ? trimmedSpeech
             : (agent.pendingOwnerReplies > 0 ? response.thought.trimmingCharacters(in: .whitespacesAndNewlines) : nil)
+
+        // --- System reactions for special commands ---
+        // /rest → auto-navigate to own house then idle
+        if resolvedCommand.name == "/rest" {
+            if let houseTile = findOwnHouse?(agent) {
+                // Navigate to house, then agent will be idle on arrival
+                agent.moveTo(tileX: houseTile.tileX, tileY: houseTile.tileY)
+                agent.currentAction = .move
+                if let replyText, !replyText.isEmpty {
+                    agent.showSpeechBubble(replyText)
+                    agent.recordAgentReply(replyText)
+                }
+                agent.memory.record(type: .move, content: "Heading home to rest at (\(houseTile.tileX), \(houseTile.tileY)).")
+                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+                return
+            } else {
+                // No house — idle in place
+                agent.clearTarget()
+                agent.memory.record(type: .observe, content: "Wanted to rest but I have no house. Need to /build_house first.")
+                if let replyText, !replyText.isEmpty {
+                    agent.showSpeechBubble(replyText)
+                    agent.recordAgentReply(replyText)
+                }
+                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+                return
+            }
+        }
+
+        // /enter_house → auto-navigate to own house
+        if resolvedCommand.name == "/enter_house" {
+            if let houseTile = findOwnHouse?(agent) {
+                agent.moveTo(tileX: houseTile.tileX, tileY: houseTile.tileY)
+                agent.currentAction = .move
+                if let replyText, !replyText.isEmpty {
+                    agent.showSpeechBubble(replyText)
+                    agent.recordAgentReply(replyText)
+                }
+                agent.memory.record(type: .move, content: "Going to my house at (\(houseTile.tileX), \(houseTile.tileY)).")
+                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+                return
+            } else {
+                agent.clearTarget()
+                agent.memory.record(type: .observe, content: "Cannot enter house — I don't own one. Build with /build_house first.")
+                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+                return
+            }
+        }
 
         switch resolvedCommand.action {
         case .idle:
@@ -163,7 +213,18 @@ final class ActionResolver {
             }
         }
 
-        // Soul reflection — agent updates its own personality/beliefs/goals
+        handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+    }
+
+    // MARK: - Soul Reflection & Logging
+
+    /// Handles soul reflection updates and command logging.
+    /// Extracted so special commands (/rest, /enter_house) can share this logic.
+    private static func handleSoulReflection(
+        _ response: LLMResponse,
+        agent: Agent,
+        resolvedCommand: ResolvedWorldCommand
+    ) {
         if let reflection = response.soulReflection {
             var soul = SoulStore.shared.soul(for: agent.entityID)
             if let p = reflection.personality, !p.isEmpty { soul.personality = p }

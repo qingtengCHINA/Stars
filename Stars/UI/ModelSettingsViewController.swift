@@ -14,19 +14,27 @@ final class ModelSettingsViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = NSLocalizedString("models.title", comment: "")
         overrideUserInterfaceStyle = .dark
 
         if let navBar = navigationController?.navigationBar {
             PixelTheme.styleNavBar(navBar)
         }
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        navigationItem.titleView = PixelTheme.makeNavTitleView(
+            iconName: "机器人",
+            text: NSLocalizedString("models.title", comment: "")
+        )
+
+        let summonItem = UIBarButtonItem(
             title: NSLocalizedString("models.add", comment: ""),
             style: .plain,
             target: self,
             action: #selector(addModel)
         )
+        let pixelAttrs: [NSAttributedString.Key: Any] = [.font: PixelTheme.boldFont(size: 16)]
+        summonItem.setTitleTextAttributes(pixelAttrs, for: .normal)
+        summonItem.setTitleTextAttributes(pixelAttrs, for: .highlighted)
+        navigationItem.rightBarButtonItem = summonItem
 
         PixelTheme.styleTableView(tableView)
         tableView.register(AgentListCell.self, forCellReuseIdentifier: "agentCell")

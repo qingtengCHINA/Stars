@@ -8,6 +8,13 @@
 
 import UIKit
 
+extension UIImage {
+    /// Load a named icon with `.alwaysOriginal` rendering mode (no tint recoloring).
+    static func pixelIcon(named name: String) -> UIImage? {
+        UIImage(named: name)?.withRenderingMode(.alwaysOriginal)
+    }
+}
+
 enum PixelTheme {
 
     // ─────────────────────────────────────
@@ -214,6 +221,46 @@ enum PixelTheme {
         tv.layer.cornerRadius = cornerRadius
         tv.textContainerInset = UIEdgeInsets(top: 8, left: 6, bottom: 8, right: 6)
         return tv
+    }
+
+    /// Create a navigation bar title view with custom icon image + text.
+    static func makeNavTitleView(iconName: String, text: String, iconSize: CGFloat = 22) -> UIView {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 6
+        stack.alignment = .center
+
+        let imageView = UIImageView()
+        imageView.image = .pixelIcon(named: iconName)
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            imageView.widthAnchor.constraint(equalToConstant: iconSize),
+            imageView.heightAnchor.constraint(equalToConstant: iconSize),
+        ])
+
+        let label = UILabel()
+        label.text = text
+        label.font = headerFont(size: 20)
+        label.textColor = textGold
+
+        stack.addArrangedSubview(imageView)
+        stack.addArrangedSubview(label)
+        return stack
+    }
+
+    /// Create a bar button item with icon image only, no background or frame.
+    static func makeIconBarButton(iconName: String, size: CGFloat = 24, target: Any?, action: Selector) -> UIBarButtonItem {
+        let button = UIButton(type: .custom)
+        button.setImage(.pixelIcon(named: iconName), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(target, action: action, for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: size),
+            button.heightAnchor.constraint(equalToConstant: size),
+        ])
+        return UIBarButtonItem(customView: button)
     }
 
 }

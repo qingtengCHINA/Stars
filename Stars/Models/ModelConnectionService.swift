@@ -159,6 +159,12 @@ final class ModelConnectionService {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         }
+
+        // OpenRouter recommended optional headers
+        if provider == .openrouter {
+            request.setValue("https://github.com/nicktmro/Stars", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("Stars", forHTTPHeaderField: "X-Title")
+        }
     }
 
     private func probeMaxTokens(for provider: APIProvider) -> Int {

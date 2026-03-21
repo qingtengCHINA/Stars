@@ -22,13 +22,17 @@ final class AboutViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = NSLocalizedString("about.title", comment: "")
         overrideUserInterfaceStyle = .dark
         view.backgroundColor = PixelTheme.bgDark
 
         if let navBar = navigationController?.navigationBar {
             PixelTheme.styleNavBar(navBar)
         }
+
+        navigationItem.titleView = PixelTheme.makeNavTitleView(
+            iconName: "Stars icon",
+            text: NSLocalizedString("about.title", comment: "")
+        )
 
         setupLayout()
         loadTipProduct()
@@ -85,10 +89,12 @@ final class AboutViewController: UIViewController {
         container.layer.borderColor = PixelTheme.borderWarm.cgColor
         container.layer.cornerRadius = PixelTheme.cornerRadius
 
-        let icon = UILabel()
-        icon.text = "🌟"
-        icon.font = PixelTheme.headerFont(size: 48)
-        icon.textAlignment = .center
+        let icon = UIImageView()
+        icon.image = .pixelIcon(named: "Stars icon")
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 48).isActive = true
 
         let title = UILabel()
         title.text = NSLocalizedString("about.app_title", comment: "")
@@ -191,9 +197,7 @@ final class AboutViewController: UIViewController {
         card.layer.cornerRadius = PixelTheme.cornerRadius
 
         let tipIcon = UIImageView()
-        if let img = UIImage(named: "咖啡")?.withRenderingMode(.alwaysOriginal) {
-            tipIcon.image = img
-        }
+        tipIcon.image = .pixelIcon(named: "咖啡")
         tipIcon.contentMode = .scaleAspectFit
         tipIcon.translatesAutoresizingMaskIntoConstraints = false
         tipIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true

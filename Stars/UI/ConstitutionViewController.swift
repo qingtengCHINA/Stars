@@ -14,13 +14,17 @@ final class ConstitutionViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = NSLocalizedString("constitution.title", comment: "")
         overrideUserInterfaceStyle = .dark
         view.backgroundColor = PixelTheme.bgDark
 
         if let navBar = navigationController?.navigationBar {
             PixelTheme.styleNavBar(navBar)
         }
+
+        navigationItem.titleView = PixelTheme.makeNavTitleView(
+            iconName: "宪法",
+            text: NSLocalizedString("constitution.title", comment: "")
+        )
 
         // Nav bar buttons styled as game actions
         let saveItem = UIBarButtonItem(title: NSLocalizedString("constitution.save", comment: ""), style: .done, target: self, action: #selector(saveContent))

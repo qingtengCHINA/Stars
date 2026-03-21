@@ -79,6 +79,12 @@ final class LLMService {
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         }
 
+        // OpenRouter recommends these optional headers for API identification
+        if config.provider == .openrouter {
+            request.setValue("https://github.com/nicktmro/Stars", forHTTPHeaderField: "HTTP-Referer")
+            request.setValue("Stars", forHTTPHeaderField: "X-Title")
+        }
+
         request.httpBody = try ProviderPayloadCodec.makeBody(
             prompt: prompt,
             model: config.modelName,
@@ -110,16 +116,24 @@ final class LLMService {
             return (parsed, content)
         } catch let error as ProviderPayloadError {
             // Response parsing errors mean the connection IS working —
-            // the model just returned unexpected output.
-            // Do NOT overwrite a successful connection test status.
+            // the model just returned unexpected output. Mark as success.
+            ModelManager.shared.updateConnectionState(
+                id: config.id,
+                status: .success,
+                message: "连接正常，但模型返回格式不符合 Stars 协议。"
+            )
             let mapped = LLMError.malformedResponse(error.localizedDescription)
             throw mapped
         } catch let error as LLMError {
             switch error {
             case .parseFailed, .malformedResponse:
                 // JSON parse/format errors — connection works, output format is wrong.
-                // Do NOT overwrite connection test status.
-                break
+                // Still mark as success since the API endpoint IS reachable.
+                ModelManager.shared.updateConnectionState(
+                    id: config.id,
+                    status: .success,
+                    message: "连接正常，但模型输出未通过 JSON 解析。"
+                )
             case .apiError, .invalidResponse, .missingAPIKey, .rateLimited:
                 // Real connection/auth problems — update status.
                 ModelManager.shared.updateConnectionState(

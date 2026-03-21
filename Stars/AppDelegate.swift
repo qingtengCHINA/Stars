@@ -11,6 +11,9 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Seed built-in agent from .env on first launch
+        BuiltInAgent.seedIfNeeded()
+
         // Authenticate Game Center
         GameCenterManager.shared.authenticate()
         return true

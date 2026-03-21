@@ -9,7 +9,7 @@ final class CameraController {
     let cameraNode: SKCameraNode
     private(set) var currentScale: CGFloat = 1.35
 
-    static let minScale: CGFloat = 0.95
+    static let minScale: CGFloat = 0.45
     static let maxScale: CGFloat = 1.85
 
     init() {

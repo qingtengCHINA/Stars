@@ -24,18 +24,20 @@ final class SettingsViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = NSLocalizedString("settings.title", comment: "")
         overrideUserInterfaceStyle = .dark
 
         if let navBar = navigationController?.navigationBar {
             PixelTheme.styleNavBar(navBar)
         }
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: NSLocalizedString("settings.done", comment: ""),
-            style: .done,
-            target: self,
-            action: #selector(dismissSettings)
+        navigationItem.titleView = PixelTheme.makeNavTitleView(
+            iconName: "设置",
+            text: NSLocalizedString("settings.title", comment: "")
+        )
+
+        navigationItem.rightBarButtonItem = PixelTheme.makeIconBarButton(
+            iconName: "完成", size: 24,
+            target: self, action: #selector(dismissSettings)
         )
 
         tableView.backgroundColor = PixelTheme.bgDark
@@ -166,7 +168,7 @@ private final class PixelMenuCell: UITableViewCell {
 
     func configure(title: String, iconName: String?) {
         titleLabel.text = title
-        if let iconName, let image = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+        if let iconName, let image = UIImage.pixelIcon(named: iconName) {
             iconView.image = image
             iconView.isHidden = false
         } else {

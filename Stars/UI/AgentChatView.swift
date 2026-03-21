@@ -150,6 +150,7 @@ final class AgentChatView: UIView {
         chatTableView.backgroundColor = PixelTheme.bgInput.withAlphaComponent(0.5)
         chatTableView.separatorStyle = .none
         chatTableView.dataSource = self
+        chatTableView.delegate = self
         chatTableView.register(ChatBubbleCell.self, forCellReuseIdentifier: "chat")
         chatTableView.rowHeight = UITableView.automaticDimension
         chatTableView.estimatedRowHeight = 44
@@ -444,6 +445,34 @@ extension AgentChatView: UITableViewDataSource {
         let isOwner = entry.role == NSLocalizedString("chat.owner", comment: "")
         cell.configure(role: entry.role, text: entry.text, isOwner: isOwner)
         return cell
+    }
+}
+
+// MARK: - Table Delegate (long-press context menu to copy)
+
+extension AgentChatView: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView,
+                   contextMenuConfigurationForRowAt indexPath: IndexPath,
+                   point: CGPoint) -> UIContextMenuConfiguration? {
+        let entry = chatEntries[indexPath.row]
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            let copyText = UIAction(
+                title: NSLocalizedString("chat.copy", comment: ""),
+                image: UIImage(systemName: "doc.on.doc")
+            ) { _ in
+                UIPasteboard.general.string = entry.text
+            }
+            let copyAll = UIAction(
+                title: NSLocalizedString("chat.copy_all", comment: ""),
+                image: UIImage(systemName: "doc.on.doc.fill")
+            ) { [weak self] _ in
+                guard let self else { return }
+                let allText = self.chatEntries.map { "\($0.role): \($0.text)" }.joined(separator: "\n")
+                UIPasteboard.general.string = allText
+            }
+            return UIMenu(title: "", children: [copyText, copyAll])
+        }
     }
 }
 

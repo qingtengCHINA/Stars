@@ -292,7 +292,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 position: CGPoint(x: snapshot.camera.x, y: snapshot.camera.y),
                 scale: CGFloat(snapshot.camera.scale)
             )
-            WorldClock.shared.restore(totalMinutes: snapshot.worldTimeMinutes)
+            WorldClock.shared.restore(totalMinutes: snapshot.worldTimeMinutes, savedAt: snapshot.savedAt)
             WorldEventLogStore.shared.append(
                 category: .persistence,
                 title: NSLocalizedString("log.world_restored", comment: ""),

@@ -63,6 +63,14 @@ final class ModelEditViewController: UIViewController {
         return false
     }
 
+    /// True when editing the built-in 星尘 agent — API key and model must be locked.
+    private var isBuiltInAgent: Bool {
+        if case .edit(let config) = mode {
+            return config.id == BuiltInAgent.stableID
+        }
+        return false
+    }
+
     // MARK: - Init
 
     init(mode: Mode) {
@@ -114,30 +122,13 @@ final class ModelEditViewController: UIViewController {
             PixelTheme.styleNavBar(navBar)
         }
 
-        // "← 返回" pixel button
-        var btnConfig = UIButton.Configuration.filled()
-        btnConfig.title = NSLocalizedString("edit.back", comment: "")
-        btnConfig.baseForegroundColor = PixelTheme.textCream
-        btnConfig.baseBackgroundColor = PixelTheme.bgLight
-        btnConfig.cornerStyle = .fixed
-        btnConfig.background.cornerRadius = PixelTheme.cornerRadius
-        btnConfig.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 14, bottom: 7, trailing: 14)
-        btnConfig.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var attr = incoming
-            attr.font = PixelTheme.boldFont(size: 16)
-            return attr
-        }
-        let backButton = UIButton(configuration: btnConfig)
-        backButton.layer.borderWidth = PixelTheme.borderWidth
-        backButton.layer.borderColor = PixelTheme.borderWarm.cgColor
-        backButton.layer.cornerRadius = PixelTheme.cornerRadius
-        backButton.addTarget(self, action: #selector(dismissSelf), for: .touchUpInside)
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: NSLocalizedString("edit.docs", comment: ""),
-            style: .plain,
-            target: self,
-            action: #selector(openProviderDocs)
+        navigationItem.leftBarButtonItem = PixelTheme.makeIconBarButton(
+            iconName: "返回", size: 24,
+            target: self, action: #selector(dismissSelf)
+        )
+        navigationItem.rightBarButtonItem = PixelTheme.makeIconBarButton(
+            iconName: "文档", size: 24,
+            target: self, action: #selector(openProviderDocs)
         )
     }
 
@@ -175,71 +166,84 @@ final class ModelEditViewController: UIViewController {
         // ── 标签 ──
         stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_alias", comment: "")))
         aliasField.autocapitalizationType = .words
+        if isBuiltInAgent { aliasField.isEnabled = false; aliasField.alpha = 0.6 }
         stack.addArrangedSubview(makeCardField(aliasField, placeholder: NSLocalizedString("edit.placeholder_alias", comment: "")))
         stack.addArrangedSubview(makeSpacer(12))
 
-        // ── API Key ──
-        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_apikey", comment: "")))
-        apiKeyField.isSecureTextEntry = true
-        apiKeyField.autocapitalizationType = .none
-        apiKeyField.autocorrectionType = .no
+        if !isBuiltInAgent {
+            // ── API Key (hidden for built-in agent) ──
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_apikey", comment: "")))
+            apiKeyField.isSecureTextEntry = true
+            apiKeyField.autocapitalizationType = .none
+            apiKeyField.autocorrectionType = .no
 
-        let eyeButton = UIButton(type: .system)
-        eyeButton.setImage(UIImage(systemName: "eye"), for: .normal)
-        eyeButton.tintColor = PixelTheme.textTan
-        eyeButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-        eyeButton.addTarget(self, action: #selector(toggleApiKeyVisibility(_:)), for: .touchUpInside)
-        apiKeyField.rightView = eyeButton
-        apiKeyField.rightViewMode = .always
+            let eyeButton = UIButton(type: .system)
+            eyeButton.setImage(UIImage(systemName: "eye"), for: .normal)
+            eyeButton.tintColor = PixelTheme.textTan
+            eyeButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+            eyeButton.addTarget(self, action: #selector(toggleApiKeyVisibility(_:)), for: .touchUpInside)
+            apiKeyField.rightView = eyeButton
+            apiKeyField.rightViewMode = .always
 
-        stack.addArrangedSubview(makeCardField(apiKeyField, placeholder: provider.apiKeyPlaceholder))
-        stack.addArrangedSubview(makeHint(NSLocalizedString("edit.apikey_hint", comment: "")))
-        stack.addArrangedSubview(makeSpacer(8))
+            stack.addArrangedSubview(makeCardField(apiKeyField, placeholder: provider.apiKeyPlaceholder))
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.apikey_hint", comment: "")))
+            stack.addArrangedSubview(makeSpacer(8))
 
-        // ── 自定义 API 地址（可选）──
-        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_baseurl", comment: "")))
+            // ── 自定义 API 地址（可选）──
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_baseurl", comment: "")))
 
-        baseURLField.keyboardType = .URL
-        baseURLField.autocapitalizationType = .none
-        baseURLField.autocorrectionType = .no
+            baseURLField.keyboardType = .URL
+            baseURLField.autocapitalizationType = .none
+            baseURLField.autocorrectionType = .no
 
-        v1Toggle.isOn = provider.defaultAppendV1
-        v1Toggle.onTintColor = .systemGreen
+            v1Toggle.isOn = provider.defaultAppendV1
+            v1Toggle.onTintColor = .systemGreen
 
-        stack.addArrangedSubview(
-            makeURLCard(field: baseURLField,
-                        placeholder: providerBaseURLPlaceholder(),
-                        toggle: v1Toggle)
-        )
-        stack.addArrangedSubview(
-            makeHint(providerBaseURLHint())
-        )
-        stack.addArrangedSubview(makeSpacer(6))
+            stack.addArrangedSubview(
+                makeURLCard(field: baseURLField,
+                            placeholder: providerBaseURLPlaceholder(),
+                            toggle: v1Toggle)
+            )
+            stack.addArrangedSubview(
+                makeHint(providerBaseURLHint())
+            )
+            stack.addArrangedSubview(makeSpacer(6))
+        }
+
         stack.addArrangedSubview(makeConnectionStatusCard())
         stack.addArrangedSubview(makeSpacer(8))
-        stack.addArrangedSubview(makeUtilityButtonsRow())
-        stack.addArrangedSubview(makeSpacer(8))
+
+        if !isBuiltInAgent {
+            stack.addArrangedSubview(makeUtilityButtonsRow())
+            stack.addArrangedSubview(makeSpacer(8))
+        }
 
         // ── 模型名称 ──
         stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_model", comment: "")))
         modelNameField.autocapitalizationType = .none
         modelNameField.autocorrectionType = .no
         modelNameField.text = provider.defaultModel
+        if isBuiltInAgent {
+            modelNameField.isEnabled = false
+            modelNameField.alpha = 0.6
+        }
         stack.addArrangedSubview(makeCardField(modelNameField, placeholder: provider.defaultModel))
-        stack.addArrangedSubview(makeHint(NSLocalizedString("edit.model_hint", comment: "")))
-        selectModelButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.select_builtin", comment: "") : NSLocalizedString("edit.select_fetched", comment: ""), for: .normal)
-        selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
-        selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
-        selectModelButton.backgroundColor = PixelTheme.bgMedium
-        selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
-        selectModelButton.layer.borderWidth = PixelTheme.borderWidth
-        selectModelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
-        selectModelButton.translatesAutoresizingMaskIntoConstraints = false
-        selectModelButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
-        selectModelButton.addTarget(self, action: #selector(selectFetchedModel), for: .touchUpInside)
-        selectModelButton.isEnabled = !fetchedModels.isEmpty
-        selectModelButton.alpha = fetchedModels.isEmpty ? 0.45 : 1.0
-        stack.addArrangedSubview(selectModelButton)
+        if !isBuiltInAgent {
+            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.model_hint", comment: "")))
+            selectModelButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.select_builtin", comment: "") : NSLocalizedString("edit.select_fetched", comment: ""), for: .normal)
+            selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
+            selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
+            selectModelButton.backgroundColor = PixelTheme.bgMedium
+            selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
+            selectModelButton.layer.borderWidth = PixelTheme.borderWidth
+            selectModelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
+            selectModelButton.translatesAutoresizingMaskIntoConstraints = false
+            selectModelButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
+            selectModelButton.addTarget(self, action: #selector(selectFetchedModel), for: .touchUpInside)
+            selectModelButton.isEnabled = !fetchedModels.isEmpty
+            selectModelButton.alpha = fetchedModels.isEmpty ? 0.45 : 1.0
+            stack.addArrangedSubview(selectModelButton)
+        }
         stack.addArrangedSubview(makeSpacer(24))
 
         // ── SOUL 配置 (edit mode only) ──
@@ -278,8 +282,8 @@ final class ModelEditViewController: UIViewController {
         submitButton.addTarget(self, action: #selector(saveModel), for: .touchUpInside)
         stack.addArrangedSubview(submitButton)
 
-        // ── Delete Button (edit mode) ──
-        if mode.isEdit {
+        // ── Delete Button (edit mode, not for built-in agent) ──
+        if mode.isEdit && !isBuiltInAgent {
             stack.addArrangedSubview(makeSpacer(12))
             let deleteButton = makeActionButton(title: NSLocalizedString("edit.delete_config", comment: ""), color: .systemRed)
             deleteButton.addTarget(self, action: #selector(deleteModel), for: .touchUpInside)
@@ -776,9 +780,13 @@ final class ModelEditViewController: UIViewController {
 
     @objc private func saveModel() {
         let apiKey = currentAPIKey()
-        guard !apiKey.isEmpty else {
-            showAlert(NSLocalizedString("edit.enter_apikey", comment: ""))
-            return
+
+        // Built-in agent: skip API key validation, keep existing key
+        if !isBuiltInAgent {
+            guard !apiKey.isEmpty else {
+                showAlert(NSLocalizedString("edit.enter_apikey", comment: ""))
+                return
+            }
         }
 
         let draft = makeDraftConfig()
@@ -790,15 +798,16 @@ final class ModelEditViewController: UIViewController {
         case .edit(let existing):
             let updated = ModelConfig(
                 id: existing.id,
-                alias: draft.alias,
-                provider: draft.provider,
-                baseURL: draft.baseURL,
-                modelName: draft.modelName,
-                appendV1: draft.appendV1,
+                alias: isBuiltInAgent ? existing.alias : draft.alias,
+                provider: existing.provider,
+                baseURL: isBuiltInAgent ? existing.baseURL : draft.baseURL,
+                modelName: isBuiltInAgent ? existing.modelName : draft.modelName,
+                appendV1: isBuiltInAgent ? existing.appendV1 : draft.appendV1,
                 connectionStatus: draft.connectionStatus,
                 connectionMessage: draft.connectionMessage
             )
-            ModelManager.shared.updateConfig(updated, apiKey: apiKey)
+            let resolvedKey = isBuiltInAgent ? (ModelManager.shared.apiKey(for: existing.id) ?? "") : apiKey
+            ModelManager.shared.updateConfig(updated, apiKey: resolvedKey)
 
             // Save SOUL changes
             var soul = SoulStore.shared.soul(for: existing.id.uuidString)
@@ -934,24 +943,18 @@ final class ModelEditViewController: UIViewController {
             return
         }
 
-        let sheet = UIAlertController(
-            title: usesStaticCatalog ? NSLocalizedString("edit.select_catalog_title", comment: "") : NSLocalizedString("edit.select_api_title", comment: ""),
-            message: nil,
-            preferredStyle: .actionSheet
-        )
-        for model in fetchedModels.prefix(12) {
-            sheet.addAction(UIAlertAction(title: model, style: .default) { [weak self] _ in
-                self?.modelNameField.text = model
-            })
+        let title = usesStaticCatalog
+            ? NSLocalizedString("edit.select_catalog_title", comment: "")
+            : NSLocalizedString("edit.select_api_title", comment: "")
+        let picker = PixelModelPickerViewController(
+            title: title,
+            models: Array(fetchedModels.prefix(20))
+        ) { [weak self] model in
+            self?.modelNameField.text = model
         }
-        sheet.addAction(UIAlertAction(title: NSLocalizedString("edit.cancel", comment: ""), style: .cancel))
-
-        if let popover = sheet.popoverPresentationController {
-            popover.sourceView = selectModelButton
-            popover.sourceRect = selectModelButton.bounds
-        }
-
-        present(sheet, animated: true)
+        picker.modalPresentationStyle = .overCurrentContext
+        picker.modalTransitionStyle = .crossDissolve
+        present(picker, animated: true)
     }
 
     private func makeDraftConfig() -> ModelConfig {
@@ -1005,6 +1008,152 @@ final class ModelEditViewController: UIViewController {
         UIView.animate(withDuration: duration) {
             self.scrollView.contentInset.bottom = bottomInset
             self.scrollView.verticalScrollIndicatorInsets.bottom = bottomInset
+        }
+    }
+}
+
+// MARK: - Pixel Model Picker
+
+/// A game-themed model picker that replaces the system UIAlertController.
+private final class PixelModelPickerViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+
+    private let titleText: String
+    private let models: [String]
+    private let onSelect: (String) -> Void
+
+    private let panelView = UIView()
+    private let tableView = UITableView(frame: .zero, style: .plain)
+
+    init(title: String, models: [String], onSelect: @escaping (String) -> Void) {
+        self.titleText = title
+        self.models = models
+        self.onSelect = onSelect
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+
+        // Tap dimmed area to dismiss
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissPicker))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+
+        // Panel
+        panelView.backgroundColor = PixelTheme.bgDark
+        panelView.layer.borderWidth = PixelTheme.thickBorder
+        panelView.layer.borderColor = PixelTheme.borderWarm.cgColor
+        panelView.layer.cornerRadius = PixelTheme.cornerRadius
+        panelView.clipsToBounds = true
+        panelView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(panelView)
+
+        // Title
+        let titleLabel = UILabel()
+        titleLabel.text = titleText
+        titleLabel.font = PixelTheme.headerFont(size: 18)
+        titleLabel.textColor = PixelTheme.textGold
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        panelView.addSubview(titleLabel)
+
+        // Divider
+        let divider = PixelTheme.makeDivider()
+        panelView.addSubview(divider)
+
+        // Table
+        tableView.backgroundColor = .clear
+        tableView.separatorColor = PixelTheme.borderWarm.withAlphaComponent(0.3)
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "modelCell")
+        tableView.rowHeight = 44
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        panelView.addSubview(tableView)
+
+        // Cancel button
+        let cancelButton = UIButton(type: .system)
+        cancelButton.setTitle(NSLocalizedString("edit.cancel", comment: ""), for: .normal)
+        cancelButton.titleLabel?.font = PixelTheme.boldFont(size: 16)
+        cancelButton.setTitleColor(PixelTheme.textTan, for: .normal)
+        cancelButton.backgroundColor = PixelTheme.bgMedium
+        cancelButton.layer.cornerRadius = PixelTheme.cornerRadius
+        cancelButton.layer.borderWidth = PixelTheme.borderWidth
+        cancelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
+        cancelButton.addTarget(self, action: #selector(dismissPicker), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        panelView.addSubview(cancelButton)
+
+        let maxTableHeight: CGFloat = min(CGFloat(models.count) * 44, 320)
+
+        NSLayoutConstraint.activate([
+            panelView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            panelView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            panelView.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, multiplier: 0.7),
+            panelView.widthAnchor.constraint(greaterThanOrEqualToConstant: 300),
+
+            titleLabel.topAnchor.constraint(equalTo: panelView.topAnchor, constant: 14),
+            titleLabel.leadingAnchor.constraint(equalTo: panelView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: panelView.trailingAnchor, constant: -16),
+
+            divider.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            divider.leadingAnchor.constraint(equalTo: panelView.leadingAnchor, constant: 12),
+            divider.trailingAnchor.constraint(equalTo: panelView.trailingAnchor, constant: -12),
+
+            tableView.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 4),
+            tableView.leadingAnchor.constraint(equalTo: panelView.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: panelView.trailingAnchor),
+            tableView.heightAnchor.constraint(equalToConstant: maxTableHeight),
+
+            cancelButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 8),
+            cancelButton.leadingAnchor.constraint(equalTo: panelView.leadingAnchor, constant: 16),
+            cancelButton.trailingAnchor.constraint(equalTo: panelView.trailingAnchor, constant: -16),
+            cancelButton.heightAnchor.constraint(equalToConstant: 40),
+            cancelButton.bottomAnchor.constraint(equalTo: panelView.bottomAnchor, constant: -14),
+        ])
+    }
+
+    @objc private func dismissPicker() {
+        dismiss(animated: true)
+    }
+
+    // MARK: - UITableViewDataSource
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        models.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "modelCell", for: indexPath)
+        cell.textLabel?.text = models[indexPath.row]
+        cell.textLabel?.font = PixelTheme.bodyFont(size: 16)
+        cell.textLabel?.textColor = PixelTheme.textCream
+        cell.backgroundColor = .clear
+        cell.selectionStyle = .none
+
+        let bg = UIView()
+        bg.backgroundColor = PixelTheme.bgLight
+        cell.selectedBackgroundView = bg
+        return cell
+    }
+
+    // MARK: - UITableViewDelegate
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let model = models[indexPath.row]
+        dismiss(animated: true) { [weak self] in
+            self?.onSelect(model)
+        }
+    }
+
+    // Dismiss when tapping outside the panel
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        if !panelView.frame.contains(touch.location(in: view)) {
+            dismissPicker()
         }
     }
 }

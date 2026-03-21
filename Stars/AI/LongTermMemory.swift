@@ -213,10 +213,67 @@ final class LongTermMemory {
 
     // MARK: - Distillation
 
+    /// Legacy single-entry distillation (kept for backward compatibility).
     func distill(entityID: String, compactedSummary: String, category: KnowledgeCategory = .event) {
         let trimmed = compactedSummary.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         record(entityID: entityID, category: category, content: trimmed, importance: 2)
+    }
+
+    /// Structured distillation from compaction extracts.
+    /// Each extract carries its own category and importance — inspired by MemOS's
+    /// memory-type-separation and OpenClaw's P0/P1/P2 priority system.
+    ///
+    /// High-importance events (kills, deaths, alliances) become P0 — never decay.
+    /// Mid-importance (combat, building) become P1. Low-importance become P2.
+    func distillFromCompaction(entityID: String, extracts: [CompactionExtract]) {
+        guard !extracts.isEmpty else { return }
+
+        // Deduplicate extracts against each other before recording
+        var seen = Set<String>()
+        for extract in extracts {
+            let key = String(extract.content.lowercased().prefix(60))
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+
+            record(
+                entityID: entityID,
+                category: extract.category,
+                content: String(extract.content.prefix(200)),
+                importance: extract.importance
+            )
+        }
+    }
+
+    // MARK: - Priority-based Decay
+
+    /// Auto-evict stale low-importance entries based on TTL.
+    /// Inspired by OpenClaw's P0/P1/P2 system:
+    ///   - importance 5 (P0): never decays
+    ///   - importance 3-4 (P1): 7-day TTL since last recall
+    ///   - importance 1-2 (P2): 3-day TTL since last recall
+    /// Call periodically (e.g., every 10 think cycles).
+    func decayStaleEntries(for entityID: String) {
+        guard var agentEntries = stores[entityID], !agentEntries.isEmpty else { return }
+        let now = Date()
+        let originalCount = agentEntries.count
+
+        agentEntries.removeAll { entry in
+            let daysSinceRecall = now.timeIntervalSince(entry.lastRecalled) / 86400
+            switch entry.importance {
+            case 5:
+                return false  // P0 — permanent
+            case 3...4:
+                return daysSinceRecall > 7 && entry.recallCount == 0  // P1 — 7 days if never recalled
+            default:
+                return daysSinceRecall > 3 && entry.recallCount == 0  // P2 — 3 days if never recalled
+            }
+        }
+
+        if agentEntries.count < originalCount {
+            stores[entityID] = agentEntries
+            save(entityID: entityID)
+        }
     }
 
     // MARK: - Keyword Extraction

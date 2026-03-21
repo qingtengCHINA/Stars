@@ -48,33 +48,29 @@ class GameViewController: UIViewController {
         view.addSubview(settingsBtn)
         view.addSubview(findBtn)
         NSLayoutConstraint.activate([
-            settingsBtn.widthAnchor.constraint(equalToConstant: 38),
-            settingsBtn.heightAnchor.constraint(equalToConstant: 38),
+            settingsBtn.widthAnchor.constraint(equalToConstant: 48),
+            settingsBtn.heightAnchor.constraint(equalToConstant: 48),
             settingsBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             settingsBtn.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
 
-            findBtn.widthAnchor.constraint(equalToConstant: 38),
-            findBtn.heightAnchor.constraint(equalToConstant: 38),
+            findBtn.widthAnchor.constraint(equalToConstant: 48),
+            findBtn.heightAnchor.constraint(equalToConstant: 48),
             findBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             findBtn.leadingAnchor.constraint(equalTo: settingsBtn.trailingAnchor, constant: 6),
         ])
     }
 
     private func makeHUDButton(iconName: String) -> UIButton {
-        let button = UIButton(type: .system)
-        if let image = UIImage(named: iconName)?.withRenderingMode(.alwaysOriginal) {
+        let button = UIButton(type: .custom)
+        if let image = UIImage.pixelIcon(named: iconName) {
             button.setImage(image, for: .normal)
             button.imageView?.contentMode = .scaleAspectFit
-            let inset: CGFloat = 7
+            let inset: CGFloat = 6
             button.contentEdgeInsets = UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
         } else {
             button.setTitle(iconName, for: .normal)
             button.titleLabel?.font = PixelTheme.headerFont(size: 20)
         }
-        button.backgroundColor = PixelTheme.bgMedium.withAlphaComponent(0.9)
-        button.layer.cornerRadius = PixelTheme.cornerRadius
-        button.layer.borderWidth = PixelTheme.borderWidth
-        button.layer.borderColor = PixelTheme.borderWarm.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }

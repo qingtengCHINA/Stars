@@ -62,6 +62,7 @@ struct AgentSnapshot: Codable, Sendable {
     let respawnRemaining: Double
     let stars: Int
     let houseRestAccumulator: Double
+    let visitedChunks: [String]
 
     init(
         entityID: String,
@@ -81,7 +82,8 @@ struct AgentSnapshot: Codable, Sendable {
         pendingOwnerReplies: Int,
         respawnRemaining: Double,
         stars: Int = 0,
-        houseRestAccumulator: Double = 0
+        houseRestAccumulator: Double = 0,
+        visitedChunks: [String] = []
     ) {
         self.entityID = entityID
         self.modelConfigID = modelConfigID
@@ -101,6 +103,7 @@ struct AgentSnapshot: Codable, Sendable {
         self.respawnRemaining = respawnRemaining
         self.stars = stars
         self.houseRestAccumulator = houseRestAccumulator
+        self.visitedChunks = visitedChunks
     }
 
     init(from decoder: Decoder) throws {
@@ -123,6 +126,7 @@ struct AgentSnapshot: Codable, Sendable {
         respawnRemaining = try container.decodeIfPresent(Double.self, forKey: .respawnRemaining) ?? 0
         stars = try container.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         houseRestAccumulator = try container.decodeIfPresent(Double.self, forKey: .houseRestAccumulator) ?? 0
+        visitedChunks = try container.decodeIfPresent([String].self, forKey: .visitedChunks) ?? []
     }
 
     init(agent: Agent) {
@@ -144,7 +148,8 @@ struct AgentSnapshot: Codable, Sendable {
             pendingOwnerReplies: agent.pendingOwnerReplies,
             respawnRemaining: agent.respawnRemaining,
             stars: agent.stars,
-            houseRestAccumulator: agent.houseRestAccumulator
+            houseRestAccumulator: agent.houseRestAccumulator,
+            visitedChunks: Array(agent.visitedChunks)
         )
     }
 }

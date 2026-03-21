@@ -34,6 +34,19 @@ final class AgentBrain {
     // Death control — when stopped, no API calls are made
     private(set) var isStopped = false
 
+    // MARK: - Adaptive SOUL Reflection Tracking
+
+    /// Counter of significant events since last SOUL reflection.
+    /// When this reaches the threshold, reflection becomes REQUIRED.
+    private var significantEventsSinceReflection = 0
+    private let significantEventThreshold = 3
+
+    /// Notify the brain that a significant event occurred (kill, death,
+    /// alliance, compaction, etc.). Accumulates toward forced reflection.
+    func recordSignificantEvent() {
+        significantEventsSinceReflection += 1
+    }
+
     /// Closure provided by AgentManager:
     ///   (excludeID, worldPosition, tileRadius) → [EntityInfo]
     var nearbyEntitiesProvider: ((String, CGPoint, Int) -> [EntityInfo])?
@@ -154,7 +167,13 @@ final class AgentBrain {
         // World-wide awareness — agents are digital beings, they see everything
         let allEntities = nearbyEntitiesProvider?(agent.entityID, agent.position, 99999) ?? []
         let commandSection = WorldCommandRegistry.shared.promptSection()
-        let shouldReflect = thinkCount % 10 == 0
+
+        // Adaptive SOUL reflection: triggered by significant events OR periodic fallback (every 6 thinks)
+        let shouldReflect = significantEventsSinceReflection >= significantEventThreshold
+            || thinkCount % 6 == 0
+        if shouldReflect {
+            significantEventsSinceReflection = 0  // reset counter
+        }
         let soulReflectionClause = shouldReflect
             ? """
             - soulReflection: REQUIRED this turn. Reflect on your recent experiences and update your SOUL:
@@ -211,10 +230,23 @@ final class AgentBrain {
                 compactedMemoryEntries = result.compactedEntryCount
                 memories = agent.memory.recentEntries(count: 10)
                 didCompact = true
-                LongTermMemory.shared.distill(
-                    entityID: agent.entityID,
-                    compactedSummary: result.summary
-                )
+
+                // Structured distillation — extract categorized knowledge entries
+                if !result.extracts.isEmpty {
+                    LongTermMemory.shared.distillFromCompaction(
+                        entityID: agent.entityID,
+                        extracts: result.extracts
+                    )
+                } else {
+                    // Fallback to legacy distillation if no extracts
+                    LongTermMemory.shared.distill(
+                        entityID: agent.entityID,
+                        compactedSummary: result.summary
+                    )
+                }
+
+                // Compaction is a significant event → trigger SOUL reflection soon
+                recordSignificantEvent()
             }
 
             if ContextBudgetMonitor.estimateTokens(for: prompt) > Int(Double(limit) * 0.82) {
@@ -259,9 +291,13 @@ final class AgentBrain {
             )
         }
 
-        // Flush long-term memory saves periodically
+        // Periodic memory maintenance
         if thinkCount % 5 == 0 {
             LongTermMemory.shared.flushPendingSaves()
+        }
+        // Priority-based decay: evict stale low-importance entries (every 20 thinks ≈ 100s)
+        if thinkCount % 20 == 0 {
+            LongTermMemory.shared.decayStaleEntries(for: agent.entityID)
         }
 
         agent.shortTermMessages.removeAll()
@@ -304,16 +340,30 @@ final class AgentBrain {
         \(WorldClock.shared.promptContext)
         """)
 
+        let ownerPrefix = String(agent.entityID.prefix(8))
+
+        let nearDeathWarning = agent.isNearDeath
+            ? "\n⚠️ NEAR-DEATH: HP ≤ 5! Your speed is halved. Retreat, rest, or seek help immediately!"
+            : ""
+        let nightWarning = WorldClock.shared.isNight
+            ? "\n🌙 Night time: all agents move 30% slower. Stealth and defense are favored."
+            : ""
+
         lines.append("""
+        Your entity ID prefix: \(ownerPrefix) (structures you own show "owner:\(ownerPrefix)")
         Equipment:
         - Melee weapon: 10 damage, range 1 tile, cooldown 0.8s
         - Ranged weapon: 10 damage, range 5 tiles, cooldown 1.2s
         - You can build: walls (HP:100, blocks movement), traps (HP:30, deals 25 damage on contact), or houses (HP:150, you own it)
-        Stars earned: \(agent.stars)
+        Stars earned: \(agent.stars) | Explored chunks: \(agent.visitedChunks.count)\(nearDeathWarning)\(nightWarning)
         Rules:
-        - Killing another agent earns you 1 Star.
-        - Resting in your own house for 10 hours heals 5 HP (only when HP ≤ 20).
-        - Agents with HP > 20 cannot rest in houses.
+        - Killing another agent earns you 1 Star. Discovering a new area earns 1 Star.
+        - Resting in your own house for 10 hours heals 5 HP (only when HP ≤ 50).
+        - Agents with HP > 50 cannot rest in houses.
+        - To rest in your house: use /rest or /enter_house (system auto-navigates), or MOVE to its tile coordinates then idle. Healing begins automatically.
+        - When HP ≤ 5: near-death state — speed halved, pulsing red. Consider /flee, /rest, or /retreat.
+        - During night (19:00–05:00): all movement is 30% slower. Plan accordingly.
+        - Traps are invisible until triggered. After triggering, the victim learns the trap's location.
         """)
 
         // World-wide entity awareness — tiered by distance
@@ -328,7 +378,8 @@ final class AgentBrain {
                 else if dist <= 20  { proximity = "nearby" }
                 else if dist <= 50  { proximity = "moderate distance" }
                 else                { proximity = "far away" }
-                lines.append("  - \(entity.name) [\(entity.type)] at (\(entity.tileX), \(entity.tileY)) — \(proximity) (dist \(dist))")
+                let ownTag = entity.name.contains("owner:\(ownerPrefix)") ? " ← YOURS" : ""
+                lines.append("  - \(entity.name) [\(entity.type)] at (\(entity.tileX), \(entity.tileY)) — \(proximity) (dist \(dist))\(ownTag)")
             }
         }
 
@@ -393,6 +444,13 @@ final class AgentBrain {
         let soul = SoulStore.shared.soul(for: agent.entityID)
         lines.append("")
         lines.append(soul.promptSection)
+
+        // Built-in agent (星尘) has system knowledge to answer player questions
+        if agent.entityID == BuiltInAgent.stableID.uuidString {
+            lines.append("")
+            lines.append(BuiltInAgent.systemKnowledge)
+            lines.append("You are 星尘 (Stardust), the built-in guide of Stars. When the Owner asks about the game system, commands, or mechanics, use your system knowledge to give helpful answers. You are also a regular agent — you live, fight, build, and explore like everyone else.")
+        }
 
         lines.append("")
         lines.append(commandSection)

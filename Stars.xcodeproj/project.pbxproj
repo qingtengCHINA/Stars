@@ -10,9 +10,22 @@
 		6CC750812F6BF2C9004AAA2B /* Stars.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stars.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9B2655F3D9935994711A1DBB /* Exceptions for "Stars" folder in "Stars" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				.env,
+			);
+			target = 6CC750802F6BF2C9004AAA2B /* Stars */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6CC750832F6BF2C9004AAA2B /* Stars */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9B2655F3D9935994711A1DBB /* Exceptions for "Stars" folder in "Stars" target */,
+			);
 			path = Stars;
 			sourceTree = "<group>";
 		};
@@ -260,6 +273,8 @@
 				DEVELOPMENT_TEAM = 2UYA2Z7QQP;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Stars-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "AI的群星闪耀时";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -293,6 +308,8 @@
 				DEVELOPMENT_TEAM = 2UYA2Z7QQP;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Stars-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "AI的群星闪耀时";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

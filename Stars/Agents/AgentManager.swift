@@ -20,6 +20,11 @@ final class AgentManager {
         ActionResolver.talkBroadcast = { [weak self] speaker, message in
             self?.broadcastTalk(from: speaker, message: message)
         }
+
+        // Wire house-finding callback — lets /rest and /enter_house commands work
+        ActionResolver.findOwnHouse = { [weak self] agent in
+            self?.buildSystem?.findOwnHouseTile(agent)
+        }
     }
 
     func syncAgents(spawnOrigin: CGPoint = .zero) {
@@ -73,7 +78,7 @@ final class AgentManager {
         }
 
         // Report to Game Center
-        GameCenterManager.shared.reportAgentCount(agents.count)
+        GameCenterManager.shared.reportAgentCount(agents.filter { $0.entityID != BuiltInAgent.stableID.uuidString }.count)
     }
 
     func restoreAgents(from snapshots: [AgentSnapshot]) {
@@ -102,7 +107,8 @@ final class AgentManager {
                 pendingOwnerReplies: snapshot.pendingOwnerReplies,
                 respawnRemaining: snapshot.respawnRemaining,
                 stars: snapshot.stars,
-                houseRestAccumulator: snapshot.houseRestAccumulator
+                houseRestAccumulator: snapshot.houseRestAccumulator,
+                visitedChunks: Set(snapshot.visitedChunks)
             )
             worldNode.addChild(agent)
             agents.append(agent)
@@ -110,7 +116,7 @@ final class AgentManager {
         }
 
         // Report to Game Center
-        GameCenterManager.shared.reportAgentCount(agents.count)
+        GameCenterManager.shared.reportAgentCount(agents.filter { $0.entityID != BuiltInAgent.stableID.uuidString }.count)
     }
 
     func snapshots() -> [AgentSnapshot] {
@@ -178,27 +184,33 @@ final class AgentManager {
 
     // MARK: - House Resting
 
-    /// 10 real hours (36000s) resting in own house → +5 HP.  HP > 20 → cannot rest.
+    /// 10 real hours (36000s) resting in own house → +5 HP.  HP > 50 → cannot rest.
     private static let houseRestThreshold: TimeInterval = 36000  // 10 hours
     private static let houseHealAmount: Int = 5
 
     private func processHouseResting(for agent: Agent, dt: TimeInterval) {
         guard !agent.isDead else {
             agent.houseRestAccumulator = 0
+            agent.isRestingInHouse = false
             return
         }
 
-        // HP > 20 → not allowed to rest in house
-        guard agent.hp <= 20 else {
+        // Check if the agent is standing on their own house tile (regardless of HP)
+        let onOwnHouse = buildSystem?.isAgentInOwnHouse(agent) == true
+
+        // Visual: show agent "inside" house when idle on own house tile
+        agent.isRestingInHouse = onOwnHouse && agent.currentAction == .idle
+
+        // HP > 50 → not allowed to heal via rest (but still show resting visual)
+        guard agent.hp <= 50 else {
             if agent.houseRestAccumulator > 0 {
                 agent.houseRestAccumulator = 0
             }
             return
         }
 
-        // Must be idle (no target) and on own house tile
-        guard agent.currentAction == .idle,
-              buildSystem?.isAgentInOwnHouse(agent) == true else {
+        // Must be idle (no target) and on own house tile to accumulate healing
+        guard agent.currentAction == .idle, onOwnHouse else {
             agent.houseRestAccumulator = 0
             return
         }

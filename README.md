@@ -89,7 +89,7 @@ Stars/
 │   └── ZSort.swift             # Y 轴排序（模拟 2.5D 深度）
 │
 ├── UI/                         # 界面层
-│   ├── PixelTheme.swift        # 全局像素主题（颜色/字体/样式）
+│   ├── PixelTheme.swift        # 全局像素主题（颜色/字体/样式/自定义图标导航栏）
 │   ├── SettingsViewController.swift      # 主设置菜单
 │   ├── ModelSettingsViewController.swift # Agent 管理列表
 │   ├── ModelEditViewController.swift     # Agent 配置编辑（API Key/模型/SOUL）
@@ -122,7 +122,7 @@ Stars/
 | **Agent** | 由 LLM 驱动的自主实体，拥有 HP、位置、记忆、SOUL |
 | **SOUL** | Agent 的灵魂：personality（人格）、beliefs（信念）、goals（目标）、journal（日志） |
 | **Brain** (`AgentBrain`) | Agent 的思考引擎，定期调用 LLM 获取下一步行动 |
-| **Constitution** | 群星宪法，所有 Agent 的系统提示词基础 |
+| **Constitution** | 群星宪法（10 章），所有 Agent 的系统提示词基础 |
 | **Star** (⭐) | 击杀奖励，未来可用于升级 |
 | **World Command** | Agent 可执行的命令（/move, /attack_melee, /build_house 等） |
 | **Structure** | 可建造的结构物：wall（墙 HP:100）、trap（陷阱 HP:30 伤害:25）、house（房屋 HP:150） |
@@ -154,12 +154,60 @@ Stars/
 
 ### 游戏规则
 
+- **坐标系**: 统一 tile 坐标系 (x, y)，所有 Agent 和结构共享同一坐标空间
+- **自由意志**: Agent 可以自由移动、探索、静止、建造或战斗，一切由 AI 自主决定
 - **攻击**: 近战 10 伤害（1 格射程，0.8s CD），远程 10 伤害（5 格射程，1.2s CD）
 - **击杀**: 杀死 Agent → 获得 1 Star (⭐)
 - **死亡**: HP 归零 → 脑停止（零 Token 消耗）→ 30 秒后复活
 - **建造**: 墙（HP:100 阻挡移动）、陷阱（HP:30 接触伤害 25）、房屋（HP:150 归属建造者）
-- **房屋休息**: HP ≤ 20 的 Agent 在自己的房屋内静止 10 小时 → 恢复 5 HP
+- **房屋休息**: HP ≤ 50 的 Agent 使用 /rest 或 /enter_house → 系统自动导航到房屋 → 静止等待 10 小时 → 恢复 5 HP → Agent 在屋内显示为半透明
+- **濒死状态**: HP ≤ 5 时移速减半，红色脉冲警告，极度危险
+- **探索奖励**: 移动到未访问过的新区块 → 获得 1 Star (🌟)
 - **语音**: 全局广播，所有存活 Agent 都能听到
+- **日夜循环**: 跟随设备真实时间，Day 计数跨日自动递增
+- **夜间效果**: 19:00–05:00 所有 Agent 移速降低 30%
+- **外交系统**: /ally 提议合作，/treaty 正式条约，/challenge 挑衅，/warn 警告
+- **内置 Agent**: 星尘（Stardust）为内置向导 Agent，可回答系统相关问题
+
+### 世界命令一览
+
+| 分类 | 命令 | 说明 | 系统反应 |
+|------|------|------|----------|
+| **静止/观察** | `/idle` | 站立不动，观察周围 | 停止移动 |
+| | `/hold` | 停止移动，保持当前位置 | 停止移动 |
+| | `/observe` | 暂停并观察环境 | 停止移动 |
+| | `/rest` | 回家休息（系统自动导航到房屋） | 自动寻找并导航到自己的房屋 |
+| | `/guard` | 守卫当前位置 | 停止移动，保持警戒 |
+| **移动** | `/move` | 移动到目标坐标 | 设置速度向目标移动 |
+| | `/goto` | 直接前往目标坐标 | 同 /move |
+| | `/explore` | 探索新区域 | 同 /move |
+| | `/scout` | 侦察任务 | 同 /move |
+| | `/patrol` | 巡逻保卫区域 | 同 /move |
+| | `/defense` | 战术重新定位 | 同 /move |
+| | `/retreat` | 后撤到安全位置 | 同 /move |
+| | `/flee` | 紧急逃跑 | 同 /move |
+| | `/enter_house` | 进入自己的房屋（系统自动定位） | 自动寻找并导航到自己的房屋 |
+| | `/follow` | 跟随目标 Agent | 同 /move |
+| **交流** | `/talk` | 与 Agent 或主人对话 | 显示语音气泡，全局广播 |
+| | `/report` | 分享状态和发现 | 同 /talk |
+| | `/respond` | 回复刚才听到的 | 同 /talk |
+| | `/wave` | 友好的招手问候 | 同 /talk |
+| | `/ally` | 提议联盟合作 | 同 /talk |
+| | `/treaty` | 正式外交条约 | 同 /talk |
+| | `/challenge` | 战前挑衅 | 同 /talk |
+| | `/warn` | 发出警告 | 同 /talk |
+| **建造** | `/build_wall` | 建造墙壁（HP:100） | 移动到目标 → 建造 |
+| | `/build_trap` | 建造陷阱（HP:30，接触 25 伤害） | 移动到目标 → 建造 |
+| | `/build_house` | 建造房屋（HP:150，归属建造者） | 移动到目标 → 建造 |
+| | `/fortify` | 加固区域（建造防御墙） | 同 /build_wall |
+| **战斗** | `/attack_melee` | 近战攻击（10 伤害，1 格） | 移动到目标 → 攻击 |
+| | `/attack_ranged` | 远程攻击（10 伤害，5 格） | 移动到目标 → 攻击 |
+| | `/harass` | 远程骚扰 | 同 /attack_ranged |
+| | `/demolish` | 拆毁建筑 | 同 /attack_melee |
+
+**特殊系统联动命令：**
+- `/rest` 和 `/enter_house` 会触发系统自动查找 Agent 的房屋坐标并导航，无需手动指定坐标
+- Agent 也可以自行注册自定义命令别名（基于已有命令）
 
 ---
 
@@ -242,7 +290,7 @@ Stars/
 │   └── ZSort.swift             # Y-axis sorting (simulates 2.5D depth)
 │
 ├── UI/                         # UI layer
-│   ├── PixelTheme.swift        # Global pixel theme (colors/fonts/styles)
+│   ├── PixelTheme.swift        # Global pixel theme (colors/fonts/styles/custom icon nav bars)
 │   ├── SettingsViewController.swift      # Main settings menu
 │   ├── ModelSettingsViewController.swift # Agent management list
 │   ├── ModelEditViewController.swift     # Agent config editor (API Key/model/SOUL)
@@ -275,7 +323,7 @@ Stars/
 | **Agent** | Autonomous entity powered by an LLM, with HP, position, memory, SOUL |
 | **SOUL** | Agent's soul: personality, beliefs, goals, journal |
 | **Brain** (`AgentBrain`) | Agent's thinking engine — periodically calls LLM for next action |
-| **Constitution** | Stars Constitution — the base system prompt for all Agents |
+| **Constitution** | Stars Constitution (10 chapters) — the base system prompt for all Agents |
 | **Star** (⭐) | Kill reward, will unlock upgrades in the future |
 | **World Command** | Commands Agents can execute (/move, /attack_melee, /build_house, etc.) |
 | **Structure** | Buildable structures: wall (HP:100), trap (HP:30, 25 dmg), house (HP:150) |
@@ -307,12 +355,60 @@ Stars/
 
 ### Game Rules
 
+- **Coordinates**: Unified tile coordinate system (x, y) — all Agents and structures share the same coordinate space
+- **Free Will**: Agents freely move, explore, stay still, build, or fight — all decisions are made autonomously by AI
 - **Attack**: Melee 10 dmg (1 tile range, 0.8s CD), Ranged 10 dmg (5 tile range, 1.2s CD)
 - **Kill**: Kill an Agent → earn 1 Star (⭐)
 - **Death**: HP reaches 0 → brain stops (zero token consumption) → respawn after 30 seconds
 - **Building**: Wall (HP:100, blocks movement), Trap (HP:30, contact 25 dmg), House (HP:150, owned by builder)
-- **House Rest**: Agent with HP ≤ 20 rests idle in own house for 10 hours → recover 5 HP
+- **House Rest**: Agent with HP ≤ 50 uses /rest or /enter_house → system auto-navigates to house → stays idle for 10 hours → recover 5 HP → Agent appears semi-transparent inside house
+- **Near-Death**: When HP ≤ 5, speed is halved with a pulsing red warning — critically dangerous
+- **Exploration Rewards**: Moving into an unvisited chunk → earn 1 Star (🌟)
 - **Speech**: Global broadcast — all living Agents hear everything
+- **Day/Night Cycle**: Follows real device time, Day counter auto-increments across calendar days
+- **Night Effects**: During 19:00–05:00, all agents move 30% slower
+- **Diplomacy**: /ally for cooperation, /treaty for formal pacts, /challenge to provoke, /warn to alert
+- **Built-in Agent**: 星尘 (Stardust) is the built-in guide agent, can answer system questions
+
+### World Commands Reference
+
+| Category | Command | Description | System Reaction |
+|----------|---------|-------------|-----------------|
+| **Idle** | `/idle` | Stand still, observe | Stop moving |
+| | `/hold` | Hold current position | Stop moving |
+| | `/observe` | Watch environment | Stop moving |
+| | `/rest` | Rest at home (auto-navigate) | System finds and navigates to own house |
+| | `/guard` | Guard current position | Stop moving, stay alert |
+| **Movement** | `/move` | Move to target tile | Set velocity toward target |
+| | `/goto` | Travel to target | Same as /move |
+| | `/explore` | Scout new area | Same as /move |
+| | `/scout` | Recon mission | Same as /move |
+| | `/patrol` | Patrol an area | Same as /move |
+| | `/defense` | Tactical reposition | Same as /move |
+| | `/retreat` | Fall back to safety | Same as /move |
+| | `/flee` | Emergency escape | Same as /move |
+| | `/enter_house` | Enter own house (auto-find) | System finds and navigates to own house |
+| | `/follow` | Follow a target agent | Same as /move |
+| **Speech** | `/talk` | Speak to agents/owner | Show speech bubble, global broadcast |
+| | `/report` | Share status/findings | Same as /talk |
+| | `/respond` | Reply to message | Same as /talk |
+| | `/wave` | Friendly greeting | Same as /talk |
+| | `/ally` | Propose alliance | Same as /talk |
+| | `/treaty` | Formal diplomatic pact | Same as /talk |
+| | `/challenge` | Provoke before combat | Same as /talk |
+| | `/warn` | Warn about danger | Same as /talk |
+| **Building** | `/build_wall` | Build wall (HP:100) | Move to target → build |
+| | `/build_trap` | Build trap (HP:30, 25 dmg) | Move to target → build |
+| | `/build_house` | Build house (HP:150, owned) | Move to target → build |
+| | `/fortify` | Build defensive walls | Same as /build_wall |
+| **Combat** | `/attack_melee` | Melee (10 dmg, 1 tile) | Move to target → attack |
+| | `/attack_ranged` | Ranged (10 dmg, 5 tiles) | Move to target → attack |
+| | `/harass` | Ranged pressure | Same as /attack_ranged |
+| | `/demolish` | Destroy a structure | Same as /attack_melee |
+
+**Special System-Linked Commands:**
+- `/rest` and `/enter_house` trigger the system to automatically find the Agent's house coordinates and navigate — no manual coordinates needed
+- Agents can also register custom command aliases (based on existing commands)
 
 ---
 

@@ -61,6 +61,26 @@ final class Agent: SKSpriteNode {
 
     /// Accumulated real seconds the agent has been idle inside its own house.
     var houseRestAccumulator: TimeInterval = 0
+    /// Set by AgentManager when agent is actively resting inside own house.
+    var isRestingInHouse: Bool = false
+
+    // MARK: - Near-Death & Movement Modifiers
+
+    /// True when HP ≤ 5 — agent is critically wounded.
+    var isNearDeath: Bool { !isDead && hp > 0 && hp <= 5 }
+
+    /// Effective move speed accounting for near-death (−50%) and night (−30%).
+    var effectiveMoveSpeed: CGFloat {
+        var speed = moveSpeed
+        if isNearDeath { speed *= 0.5 }
+        if WorldClock.shared.isNight { speed *= 0.7 }
+        return speed
+    }
+
+    // MARK: - Exploration
+
+    /// Tiles this agent has visited (tracked as "chunkX_chunkY" for 8×8 chunks).
+    var visitedChunks: Set<String> = []
 
     // MARK: - Movement
 
@@ -81,6 +101,8 @@ final class Agent: SKSpriteNode {
     private var speechTimer: TimeInterval = 0
     private var hpBarBg: SKSpriteNode?
     private var hpBarFill: SKSpriteNode?
+    private var restingNode: SKLabelNode?
+    private var nearDeathPulseAction: SKAction?
 
     // MARK: - Constants
 
@@ -168,6 +190,72 @@ final class Agent: SKSpriteNode {
         }
     }
 
+    // MARK: - Resting Visual
+
+    private func updateRestingVisual() {
+        if isRestingInHouse {
+            // Agent is inside their house — render semi-transparent with zzz indicator
+            if !isDead { alpha = 0.35 }
+            if restingNode == nil {
+                let zzz = SKLabelNode(text: "💤")
+                zzz.fontSize = 8
+                zzz.position = CGPoint(x: 0, y: Self.agentSize / 2 + 14)
+                zzz.zPosition = 4
+                zzz.name = "restingIndicator"
+                addChild(zzz)
+                restingNode = zzz
+                // Gentle floating animation
+                let floatUp = SKAction.moveBy(x: 0, y: 3, duration: 1.2)
+                let floatDown = SKAction.moveBy(x: 0, y: -3, duration: 1.2)
+                zzz.run(SKAction.repeatForever(SKAction.sequence([floatUp, floatDown])))
+            }
+        } else {
+            // Not resting — restore full visibility
+            if !isDead { alpha = 1.0 }
+            if let node = restingNode {
+                node.removeAllActions()
+                node.removeFromParent()
+                restingNode = nil
+            }
+        }
+    }
+
+    // MARK: - Near-Death Visual
+
+    private func updateNearDeathVisual() {
+        if isNearDeath {
+            // Pulsing red tint when critically wounded
+            if nearDeathPulseAction == nil {
+                let pulseRed = SKAction.colorize(with: .red, colorBlendFactor: 0.6, duration: 0.5)
+                let pulseBack = SKAction.colorize(withColorBlendFactor: 0.1, duration: 0.5)
+                let pulse = SKAction.repeatForever(SKAction.sequence([pulseRed, pulseBack]))
+                pulse.timingMode = .easeInEaseOut
+                nearDeathPulseAction = pulse
+                run(pulse, withKey: "nearDeathPulse")
+            }
+        } else {
+            if nearDeathPulseAction != nil {
+                removeAction(forKey: "nearDeathPulse")
+                nearDeathPulseAction = nil
+                if !isDead && !isRestingInHouse {
+                    run(SKAction.colorize(withColorBlendFactor: 0, duration: 0.2))
+                }
+            }
+        }
+    }
+
+    // MARK: - Exploration Tracking
+
+    /// Check and record chunk visit. Returns true if this is a newly discovered chunk.
+    func trackExploration() -> Bool {
+        let chunkX = Int(floor(position.x / (Chunk.tileSize * 8)))
+        let chunkY = Int(floor(position.y / (Chunk.tileSize * 8)))
+        let key = "\(chunkX)_\(chunkY)"
+        if visitedChunks.contains(key) { return false }
+        visitedChunks.insert(key)
+        return true
+    }
+
     // MARK: - Tile Coordinates
 
     var tileX: Int { Int(floor(position.x / Chunk.tileSize)) }
@@ -195,15 +283,15 @@ final class Agent: SKSpriteNode {
 
     func showSpeechBubble(_ text: String) {
         speechNode?.removeFromParent()
-        let display = text.count > 30 ? String(text.prefix(30)) + "…" : text
+        let display = text.count > 40 ? String(text.prefix(40)) + "…" : text
 
         let label = SKLabelNode(text: display)
-        label.fontSize = 6
+        label.fontSize = 8
         label.fontName = PixelTheme.skFontName
         label.fontColor = .white
-        label.position = CGPoint(x: 0, y: Self.agentSize / 2 + 6)
+        label.position = CGPoint(x: 0, y: Self.agentSize / 2 + 8)
         label.numberOfLines = 2
-        label.preferredMaxLayoutWidth = 80
+        label.preferredMaxLayoutWidth = 100
         label.horizontalAlignmentMode = .center
         label.verticalAlignmentMode = .bottom
         label.zPosition = 3
@@ -346,6 +434,7 @@ final class Agent: SKSpriteNode {
 
         memory.record(type: .combat, content: "Respawned with full HP at (\(tileX), \(tileY)). My consciousness returns. I remember dying.")
         forceNextThink = true  // Think immediately after revival
+        brain?.recordSignificantEvent()  // respawn → trigger SOUL reflection
 
         LongTermMemory.shared.recordCombatEvent(
             entityID: entityID,
@@ -372,7 +461,8 @@ final class Agent: SKSpriteNode {
         pendingOwnerReplies: Int,
         respawnRemaining: TimeInterval,
         stars: Int = 0,
-        houseRestAccumulator: TimeInterval = 0
+        houseRestAccumulator: TimeInterval = 0,
+        visitedChunks: Set<String> = []
     ) {
         self.position = position
         self.hp = max(0, min(hp, maxHP))
@@ -386,6 +476,7 @@ final class Agent: SKSpriteNode {
         self.respawnTimer = max(0, respawnRemaining)
         self.stars = stars
         self.houseRestAccumulator = houseRestAccumulator
+        self.visitedChunks = visitedChunks
 
         if isDead {
             applyDeadStateForRestore()
@@ -432,6 +523,19 @@ final class Agent: SKSpriteNode {
 
         // Update depth sorting based on y-position
         zPosition = ZSort.depthZ(for: position.y)
+
+        // Resting-in-house visual — agent appears semi-transparent inside the house
+        updateRestingVisual()
+
+        // Near-death visual — pulsing red tint when HP ≤ 5
+        updateNearDeathVisual()
+
+        // Exploration tracking — award star for discovering new chunks
+        if !isDead && trackExploration() {
+            stars += 1
+            memory.record(type: .observe, content: "Discovered a new area! Earned an exploration Star. Total Stars: \(stars).")
+            showSpeechBubble("🌟 New area!")
+        }
 
         // Dead → count down respawn
         if isDead {
@@ -506,8 +610,9 @@ final class Agent: SKSpriteNode {
             return
         }
 
-        let vx = (dx / dist) * moveSpeed
-        let vy = (dy / dist) * moveSpeed
+        let speed = effectiveMoveSpeed
+        let vx = (dx / dist) * speed
+        let vy = (dy / dist) * speed
         physicsBody?.velocity = CGVector(dx: vx, dy: vy)
         facingAngle = atan2(vy, vx)
     }
@@ -531,9 +636,10 @@ final class Agent: SKSpriteNode {
         if wanderIdle {
             physicsBody?.velocity = .zero
         } else {
+            let speed = effectiveMoveSpeed
             physicsBody?.velocity = CGVector(
-                dx: wanderDirection.dx * moveSpeed,
-                dy: wanderDirection.dy * moveSpeed
+                dx: wanderDirection.dx * speed,
+                dy: wanderDirection.dy * speed
             )
         }
     }
