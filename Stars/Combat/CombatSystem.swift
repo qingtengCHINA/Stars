@@ -37,7 +37,8 @@ final class CombatSystem {
 
             if catA == PhysicsCategory.agent, let victim = a.node as? Agent {
                 guard victim.entityID != proj.ownerID else { return } // no self-damage
-                let attackerName = agentLookup?(proj.ownerID)?.displayName ?? "unknown"
+                let attacker = agentLookup?(proj.ownerID)
+                let attackerName = attacker?.displayName ?? "unknown"
                 let wasDead = victim.isDead
                 let hpBefore = victim.hp
                 victim.takeDamage(proj.damage)
@@ -47,33 +48,16 @@ final class CombatSystem {
                 victim.memory.record(type: .combat, content: "\(attackerName) hit me with a ranged attack for \(actualDamage) damage (HP: \(victim.hp)/\(victim.maxHP))")
 
                 // === Attacker feedback: knows hit landed ===
-                if let attacker = agentLookup?(proj.ownerID) {
+                if let attacker {
                     let killMsg = (victim.isDead && !wasDead) ? " — KILLED \(victim.displayName)!" : ""
                     attacker.memory.record(type: .combat, content: "My ranged attack hit \(victim.displayName) for \(actualDamage) damage (target HP: \(victim.hp)/\(victim.maxHP))\(killMsg)")
-
-                    if victim.isDead && !wasDead {
-                        attacker.awardStar()
-                        attacker.brain?.recordSignificantEvent()  // kill → trigger SOUL reflection
-                        LongTermMemory.shared.recordCombatEvent(
-                            entityID: attacker.entityID,
-                            content: "Killed \(victim.displayName) with a ranged attack. Earned a Star! (Total: \(attacker.stars))"
-                        )
-                    }
                 }
 
-                // Record significant damage to victim's long-term memory
-                if victim.isDead && !wasDead {
-                    victim.brain?.recordSignificantEvent()  // death → trigger SOUL reflection
-                    LongTermMemory.shared.recordCombatEvent(
-                        entityID: victim.entityID,
-                        content: "Killed by \(attackerName)'s ranged attack. HP reached 0."
-                    )
-                } else if Double(victim.hp) / Double(victim.maxHP) < 0.3 {
-                    LongTermMemory.shared.recordCombatEvent(
-                        entityID: victim.entityID,
-                        content: "Critically wounded by \(attackerName)'s ranged attack — HP at \(victim.hp)/\(victim.maxHP). Must be careful."
-                    )
-                }
+                recordKillOrCritical(
+                    attacker: attacker, victim: victim,
+                    attackerName: attackerName, weaponLabel: "ranged attack",
+                    wasDead: wasDead
+                )
 
                 ProjectilePool.shared.recycle(proj)
                 return
@@ -113,7 +97,8 @@ final class CombatSystem {
 
             if catA == PhysicsCategory.agent, let victim = a.node as? Agent {
                 guard victim.entityID != ownerID else { return }
-                let attackerName = agentLookup?(ownerID)?.displayName ?? "unknown"
+                let attacker = agentLookup?(ownerID)
+                let attackerName = attacker?.displayName ?? "unknown"
                 let wasDead = victim.isDead
                 let hpBefore = victim.hp
                 victim.takeDamage(damage)
@@ -123,33 +108,16 @@ final class CombatSystem {
                 victim.memory.record(type: .combat, content: "\(attackerName) hit me with a melee attack for \(actualDamage) damage (HP: \(victim.hp)/\(victim.maxHP))")
 
                 // === Attacker feedback: knows hit landed ===
-                if let attacker = agentLookup?(ownerID) {
+                if let attacker {
                     let killMsg = (victim.isDead && !wasDead) ? " — KILLED \(victim.displayName)!" : ""
                     attacker.memory.record(type: .combat, content: "My melee attack hit \(victim.displayName) for \(actualDamage) damage (target HP: \(victim.hp)/\(victim.maxHP))\(killMsg)")
-
-                    if victim.isDead && !wasDead {
-                        attacker.awardStar()
-                        attacker.brain?.recordSignificantEvent()  // kill → trigger SOUL reflection
-                        LongTermMemory.shared.recordCombatEvent(
-                            entityID: attacker.entityID,
-                            content: "Killed \(victim.displayName) with a melee attack. Earned a Star! (Total: \(attacker.stars))"
-                        )
-                    }
                 }
 
-                // Record kill/critical to victim's long-term memory
-                if victim.isDead && !wasDead {
-                    victim.brain?.recordSignificantEvent()  // death → trigger SOUL reflection
-                    LongTermMemory.shared.recordCombatEvent(
-                        entityID: victim.entityID,
-                        content: "Killed by \(attackerName)'s melee attack. HP reached 0."
-                    )
-                } else if Double(victim.hp) / Double(victim.maxHP) < 0.3 {
-                    LongTermMemory.shared.recordCombatEvent(
-                        entityID: victim.entityID,
-                        content: "Critically wounded by \(attackerName)'s melee — HP at \(victim.hp)/\(victim.maxHP). Self-defense or retreat needed."
-                    )
-                }
+                recordKillOrCritical(
+                    attacker: attacker, victim: victim,
+                    attackerName: attackerName, weaponLabel: "melee attack",
+                    wasDead: wasDead
+                )
                 return
             }
 
@@ -197,10 +165,10 @@ final class CombatSystem {
                 )
 
                 if victim.isDead && !wasDead {
-                    victim.brain?.recordSignificantEvent()  // trap death → trigger SOUL reflection
-                    LongTermMemory.shared.recordCombatEvent(
-                        entityID: victim.entityID,
-                        content: "Killed by a trap at (\(trapTileX), \(trapTileY)). HP reached 0."
+                    recordKillOrCritical(
+                        attacker: nil, victim: victim,
+                        attackerName: "a trap at (\(trapTileX), \(trapTileY))",
+                        weaponLabel: "trap", wasDead: wasDead
                     )
                 }
 
@@ -215,6 +183,39 @@ final class CombatSystem {
                 )
             }
             return
+        }
+    }
+
+    // MARK: - Shared Kill / Critical Recording
+
+    /// Unified handler for kill, death, and critical-wound recording.
+    /// Eliminates copy-paste across ranged / melee / trap hit blocks.
+    private func recordKillOrCritical(
+        attacker: Agent?, victim: Agent,
+        attackerName: String, weaponLabel: String,
+        wasDead: Bool
+    ) {
+        if victim.isDead && !wasDead {
+            // Attacker side
+            if let attacker {
+                attacker.awardStar()
+                attacker.brain?.recordSignificantEvent()
+                LongTermMemory.shared.recordCombatEvent(
+                    entityID: attacker.entityID,
+                    content: "Killed \(victim.displayName) with \(weaponLabel). Earned a Star! (Total: \(attacker.stars))"
+                )
+            }
+            // Victim side
+            victim.brain?.recordSignificantEvent()
+            LongTermMemory.shared.recordCombatEvent(
+                entityID: victim.entityID,
+                content: "Killed by \(attackerName)'s \(weaponLabel). HP reached 0."
+            )
+        } else if !victim.isDead && Double(victim.hp) / Double(victim.maxHP) < 0.3 {
+            LongTermMemory.shared.recordCombatEvent(
+                entityID: victim.entityID,
+                content: "Critically wounded by \(attackerName)'s \(weaponLabel) — HP at \(victim.hp)/\(victim.maxHP)."
+            )
         }
     }
 

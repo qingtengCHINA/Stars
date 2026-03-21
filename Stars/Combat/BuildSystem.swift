@@ -175,13 +175,8 @@ final class BuildSystem {
 
     /// Returns true if the agent is standing on their own house tile.
     func isAgentInOwnHouse(_ agent: Agent) -> Bool {
-        structures.contains { s in
-            s.structureType == .house &&
-            s.ownerID == agent.entityID &&
-            s.hp > 0 &&
-            Int(floor(s.position.x / Chunk.tileSize)) == agent.tileX &&
-            Int(floor(s.position.y / Chunk.tileSize)) == agent.tileY
-        }
+        guard let tile = findOwnHouseTile(agent) else { return false }
+        return tile.tileX == agent.tileX && tile.tileY == agent.tileY
     }
 
     private func canBuilderReachTile(builder: Agent, tileX: Int, tileY: Int) -> Bool {

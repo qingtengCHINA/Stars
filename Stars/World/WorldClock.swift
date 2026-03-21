@@ -67,10 +67,8 @@ final class WorldClock {
         }
     }
 
-    /// True during night hours (19:00–05:00).
-    var isNight: Bool {
-        hour >= 19 || hour < 5
-    }
+    /// True during night hours (19:00–05:00). Cached per-frame in `update()`.
+    private(set) var isNight: Bool = false
 
     /// One-line time context for agent prompts.
     var promptContext: String {
@@ -109,9 +107,12 @@ final class WorldClock {
 
     // MARK: - Update
 
-    /// Called every frame to check for calendar day rollover.
+    /// Called every frame to check for calendar day rollover and refresh cached state.
     func update(deltaTime dt: TimeInterval) {
         let now = Date()
+        let currentHour = calendar.component(.hour, from: now)
+        isNight = currentHour >= 19 || currentHour < 5
+
         if !calendar.isDate(now, inSameDayAs: lastKnownDate) {
             let dayDiff = calendar.dateComponents([.day], from: lastKnownDate, to: now).day ?? 0
             if dayDiff > 0 {

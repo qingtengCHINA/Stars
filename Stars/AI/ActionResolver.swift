@@ -97,50 +97,18 @@ final class ActionResolver {
             : (agent.pendingOwnerReplies > 0 ? response.thought.trimmingCharacters(in: .whitespacesAndNewlines) : nil)
 
         // --- System reactions for special commands ---
-        // /rest → auto-navigate to own house then idle
-        if resolvedCommand.name == "/rest" {
-            if let houseTile = findOwnHouse?(agent) {
-                // Navigate to house, then agent will be idle on arrival
-                agent.moveTo(tileX: houseTile.tileX, tileY: houseTile.tileY)
-                agent.currentAction = .move
-                if let replyText, !replyText.isEmpty {
-                    agent.showSpeechBubble(replyText)
-                    agent.recordAgentReply(replyText)
-                }
-                agent.memory.record(type: .move, content: "Heading home to rest at (\(houseTile.tileX), \(houseTile.tileY)).")
-                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
-                return
-            } else {
-                // No house — idle in place
-                agent.clearTarget()
-                agent.memory.record(type: .observe, content: "Wanted to rest but I have no house. Need to /build_house first.")
-                if let replyText, !replyText.isEmpty {
-                    agent.showSpeechBubble(replyText)
-                    agent.recordAgentReply(replyText)
-                }
-                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
-                return
-            }
-        }
-
-        // /enter_house → auto-navigate to own house
-        if resolvedCommand.name == "/enter_house" {
-            if let houseTile = findOwnHouse?(agent) {
-                agent.moveTo(tileX: houseTile.tileX, tileY: houseTile.tileY)
-                agent.currentAction = .move
-                if let replyText, !replyText.isEmpty {
-                    agent.showSpeechBubble(replyText)
-                    agent.recordAgentReply(replyText)
-                }
-                agent.memory.record(type: .move, content: "Going to my house at (\(houseTile.tileX), \(houseTile.tileY)).")
-                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
-                return
-            } else {
-                agent.clearTarget()
-                agent.memory.record(type: .observe, content: "Cannot enter house — I don't own one. Build with /build_house first.")
-                handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
-                return
-            }
+        // /rest and /enter_house both auto-navigate to own house
+        if resolvedCommand.name == "/rest" || resolvedCommand.name == "/enter_house" {
+            let isRest = resolvedCommand.name == "/rest"
+            handleHouseNavigation(
+                agent: agent, response: response,
+                resolvedCommand: resolvedCommand, replyText: replyText,
+                successMemory: isRest ? "Heading home to rest" : "Going to my house",
+                failMemory: isRest
+                    ? "Wanted to rest but I have no house. Need to /build_house first."
+                    : "Cannot enter house — I don't own one. Build with /build_house first."
+            )
+            return
         }
 
         switch resolvedCommand.action {
@@ -213,6 +181,33 @@ final class ActionResolver {
             }
         }
 
+        handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+    }
+
+    // MARK: - House Navigation (shared by /rest and /enter_house)
+
+    /// Unified handler for commands that auto-navigate to the agent's house.
+    private static func handleHouseNavigation(
+        agent: Agent, response: LLMResponse,
+        resolvedCommand: ResolvedWorldCommand, replyText: String?,
+        successMemory: String, failMemory: String
+    ) {
+        if let houseTile = findOwnHouse?(agent) {
+            agent.moveTo(tileX: houseTile.tileX, tileY: houseTile.tileY)
+            agent.currentAction = .move
+            if let replyText, !replyText.isEmpty {
+                agent.showSpeechBubble(replyText)
+                agent.recordAgentReply(replyText)
+            }
+            agent.memory.record(type: .move, content: "\(successMemory) at (\(houseTile.tileX), \(houseTile.tileY)).")
+        } else {
+            agent.clearTarget()
+            agent.memory.record(type: .observe, content: failMemory)
+            if let replyText, !replyText.isEmpty {
+                agent.showSpeechBubble(replyText)
+                agent.recordAgentReply(replyText)
+            }
+        }
         handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
     }
 

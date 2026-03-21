@@ -68,22 +68,7 @@ final class LLMService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        switch config.provider.definition.authMode {
-        case .bearer:
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        case .anthropicAPIKey:
-            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-            request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        case .bearerAnthropicMessages:
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-            request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        }
-
-        // OpenRouter recommends these optional headers for API identification
-        if config.provider == .openrouter {
-            request.setValue("https://github.com/nicktmro/Stars", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Stars", forHTTPHeaderField: "X-Title")
-        }
+        APIRequestHeaders.apply(to: &request, provider: config.provider, apiKey: apiKey)
 
         request.httpBody = try ProviderPayloadCodec.makeBody(
             prompt: prompt,

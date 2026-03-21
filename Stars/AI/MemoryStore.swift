@@ -160,7 +160,7 @@ final class MemoryStore {
 
         // ── 3. Build continuity bridge (what was the agent doing/pursuing?) ──
 
-        let bridgeContext = buildBridgeContext(from: olderEntries, into: newerEntries)
+        let bridgeContext = buildBridgeContext(from: olderEntries)
 
         // ── 4. Replace old entries with compacted summary + bridge ──
 
@@ -200,18 +200,18 @@ final class MemoryStore {
     private struct Episode {
         var entries: [MemoryEntry]
         var dominantType: MemoryEventType
+        var typeCounts: [MemoryEventType: Int]
 
         init(first: MemoryEntry) {
             entries = [first]
             dominantType = first.type
+            typeCounts = [first.type: 1]
         }
 
         mutating func append(_ entry: MemoryEntry) {
             entries.append(entry)
-            // Update dominant type by majority
-            var counts: [MemoryEventType: Int] = [:]
-            for e in entries { counts[e.type, default: 0] += 1 }
-            if let top = counts.max(by: { $0.value < $1.value }) {
+            typeCounts[entry.type, default: 0] += 1
+            if let top = typeCounts.max(by: { $0.value < $1.value }) {
                 dominantType = top.key
             }
         }
@@ -244,12 +244,13 @@ final class MemoryStore {
     /// entries (routine movement) are skipped.
     private func classifyForDistillation(_ entry: MemoryEntry) -> CompactionExtract? {
         let content = entry.content
+        let lowered = content.lowercased()
 
         switch entry.type {
         case .combat:
             // Deaths and kills are critical (importance 4-5)
-            let isKill = content.lowercased().contains("kill") || content.contains("击杀")
-            let isDeath = content.lowercased().contains("died") || content.lowercased().contains("dead") || content.contains("死亡")
+            let isKill = lowered.contains("kill") || content.contains("击杀")
+            let isDeath = lowered.contains("died") || lowered.contains("dead") || content.contains("死亡")
             if isKill || isDeath {
                 return CompactionExtract(category: .event, content: content, importance: 5)
             }
@@ -294,13 +295,12 @@ final class MemoryStore {
     /// at the point of compaction — what they were doing, who they
     /// interacted with, and what their last significant action was.
     /// This prevents the "amnesia wall" that occurs after compaction.
-    private func buildBridgeContext(from older: [MemoryEntry], into newer: [MemoryEntry]) -> String? {
+    private func buildBridgeContext(from older: [MemoryEntry]) -> String? {
         // Find the last significant entry (combat, talk, or build)
         let significant = older.reversed().first { $0.type == .combat || $0.type == .talk || $0.type == .build }
 
-        // Find any agent names mentioned in older entries
-        let allContent = older.map { $0.content }.joined(separator: " ")
-        let mentionedAgents = extractAgentNames(from: allContent)
+        // Find any agent names mentioned in older entries (per-entry to avoid large string join)
+        let mentionedAgents = extractAgentNames(from: older)
 
         var parts = [String]()
 
@@ -332,22 +332,26 @@ final class MemoryStore {
         return "⟨Memory Bridge⟩ " + parts.joined(separator: " ")
     }
 
-    /// Simple heuristic to extract agent names from memory text.
-    /// Looks for quoted names and known patterns like "Agent X" or "「name」".
-    private func extractAgentNames(from text: String) -> [String] {
+    // MARK: - Agent Name Extraction (static compiled regex)
+
+    private static let namePatterns: [NSRegularExpression] = [
+        try! NSRegularExpression(pattern: "\"([^\"]{1,20})\"\\s+(?:said|attacked|killed|built)", options: []),
+        try! NSRegularExpression(pattern: "\u{300C}([^\u{300D}]{1,20})\u{300D}", options: []),
+        try! NSRegularExpression(pattern: "([A-Z][a-z]+(?:\\s[A-Z][a-z]+)?)\\s+(?:said|attacked|killed|built|is)", options: []),
+    ]
+
+    /// Extract agent names from memory entries without joining into one large string.
+    private func extractAgentNames(from entries: [MemoryEntry]) -> [String] {
         var names = Set<String>()
-        // Match patterns like "AgentName said", "AgentName attacked", quoted names
-        let patterns = [
-            try? NSRegularExpression(pattern: "\"([^\"]{1,20})\"\\s+(?:said|attacked|killed|built)", options: []),
-            try? NSRegularExpression(pattern: "「([^」]{1,20})」", options: []),
-            try? NSRegularExpression(pattern: "([A-Z][a-z]+(?:\\s[A-Z][a-z]+)?)\\s+(?:said|attacked|killed|built|is)", options: []),
-        ].compactMap { $0 }
-        let range = NSRange(text.startIndex..., in: text)
-        for regex in patterns {
-            for match in regex.matches(in: text, options: [], range: range) {
-                if match.numberOfRanges > 1,
-                   let nameRange = Range(match.range(at: 1), in: text) {
-                    names.insert(String(text[nameRange]))
+        for entry in entries {
+            let text = entry.content
+            let range = NSRange(text.startIndex..., in: text)
+            for regex in Self.namePatterns {
+                for match in regex.matches(in: text, options: [], range: range) {
+                    if match.numberOfRanges > 1,
+                       let nameRange = Range(match.range(at: 1), in: text) {
+                        names.insert(String(text[nameRange]))
+                    }
                 }
             }
         }

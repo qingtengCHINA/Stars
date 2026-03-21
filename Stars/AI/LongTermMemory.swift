@@ -228,14 +228,8 @@ final class LongTermMemory {
     /// Mid-importance (combat, building) become P1. Low-importance become P2.
     func distillFromCompaction(entityID: String, extracts: [CompactionExtract]) {
         guard !extracts.isEmpty else { return }
-
-        // Deduplicate extracts against each other before recording
-        var seen = Set<String>()
+        // record() already deduplicates via similar() — no need for pre-dedup here.
         for extract in extracts {
-            let key = String(extract.content.lowercased().prefix(60))
-            guard !seen.contains(key) else { continue }
-            seen.insert(key)
-
             record(
                 entityID: entityID,
                 category: extract.category,
@@ -261,12 +255,10 @@ final class LongTermMemory {
         agentEntries.removeAll { entry in
             let daysSinceRecall = now.timeIntervalSince(entry.lastRecalled) / 86400
             switch entry.importance {
-            case 5:
-                return false  // P0 — permanent
-            case 3...4:
-                return daysSinceRecall > 7 && entry.recallCount == 0  // P1 — 7 days if never recalled
-            default:
-                return daysSinceRecall > 3 && entry.recallCount == 0  // P2 — 3 days if never recalled
+            case 5:       return false                                   // P0 — permanent
+            case 3...4:   return daysSinceRecall > 7 && entry.recallCount == 0  // P1 — 7-day TTL
+            case 1...2:   return daysSinceRecall > 3 && entry.recallCount == 0  // P2 — 3-day TTL
+            default:      return false  // guard against unexpected values
             }
         }
 

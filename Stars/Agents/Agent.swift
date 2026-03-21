@@ -103,6 +103,8 @@ final class Agent: SKSpriteNode {
     private var hpBarFill: SKSpriteNode?
     private var restingNode: SKLabelNode?
     private var nearDeathPulseAction: SKAction?
+    private var _wasResting = false
+    private var _wasNearDeath = false
 
     // MARK: - Constants
 
@@ -246,10 +248,19 @@ final class Agent: SKSpriteNode {
 
     // MARK: - Exploration Tracking
 
+    /// Cached chunk coordinate to avoid per-frame String allocation.
+    /// Only generates a Set key when the agent actually moves to a new chunk.
+    private var lastChunkX: Int = Int.min
+    private var lastChunkY: Int = Int.min
+
     /// Check and record chunk visit. Returns true if this is a newly discovered chunk.
     func trackExploration() -> Bool {
         let chunkX = Int(floor(position.x / (Chunk.tileSize * 8)))
         let chunkY = Int(floor(position.y / (Chunk.tileSize * 8)))
+        // Fast path: still in the same chunk as last frame
+        guard chunkX != lastChunkX || chunkY != lastChunkY else { return false }
+        lastChunkX = chunkX
+        lastChunkY = chunkY
         let key = "\(chunkX)_\(chunkY)"
         if visitedChunks.contains(key) { return false }
         visitedChunks.insert(key)
@@ -524,11 +535,19 @@ final class Agent: SKSpriteNode {
         // Update depth sorting based on y-position
         zPosition = ZSort.depthZ(for: position.y)
 
-        // Resting-in-house visual — agent appears semi-transparent inside the house
-        updateRestingVisual()
+        // Resting-in-house visual — only update when state changes
+        let resting = isRestingInHouse
+        if resting != _wasResting {
+            _wasResting = resting
+            updateRestingVisual()
+        }
 
-        // Near-death visual — pulsing red tint when HP ≤ 5
-        updateNearDeathVisual()
+        // Near-death visual — only update when state changes
+        let nearDeath = isNearDeath
+        if nearDeath != _wasNearDeath {
+            _wasNearDeath = nearDeath
+            updateNearDeathVisual()
+        }
 
         // Exploration tracking — award star for discovering new chunks
         if !isDead && trackExploration() {
