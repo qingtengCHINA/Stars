@@ -71,6 +71,19 @@ final class ModelEditViewController: UIViewController {
         return false
     }
 
+    /// True for any official (developer-provided) provider.
+    private var isOfficialProvider: Bool {
+        mode.provider.isOfficialProvider
+    }
+
+    /// True for official providers that show a model selector (Plus/Pro/Max).
+    private var officialShowsModelPicker: Bool {
+        switch mode.provider {
+        case .starsPlus, .starsPro, .starsMax: return true
+        default: return false
+        }
+    }
+
     // MARK: - Init
 
     init(mode: Mode) {
@@ -126,10 +139,13 @@ final class ModelEditViewController: UIViewController {
             iconName: "返回", size: 24,
             target: self, action: #selector(dismissSelf)
         )
-        navigationItem.rightBarButtonItem = PixelTheme.makeIconBarButton(
-            iconName: "文档", size: 24,
-            target: self, action: #selector(openProviderDocs)
-        )
+        // Hide docs button for official providers (no external docs)
+        if !isOfficialProvider {
+            navigationItem.rightBarButtonItem = PixelTheme.makeIconBarButton(
+                iconName: "文档", size: 24,
+                target: self, action: #selector(openProviderDocs)
+            )
+        }
     }
 
     // MARK: - Form Setup
@@ -160,8 +176,19 @@ final class ModelEditViewController: UIViewController {
 
         let provider = mode.provider
 
-        stack.addArrangedSubview(makeProviderInfoCard())
-        stack.addArrangedSubview(makeSpacer(14))
+        // ── Provider Info Card ──
+        if isOfficialProvider {
+            if officialShowsModelPicker {
+                stack.addArrangedSubview(makeOfficialTierInfoCard())
+            } else {
+                // QingTeng: show free-tier info card with subscription prompt
+                stack.addArrangedSubview(makeFreeTierInfoCard())
+            }
+            stack.addArrangedSubview(makeSpacer(14))
+        } else {
+            stack.addArrangedSubview(makeProviderInfoCard())
+            stack.addArrangedSubview(makeSpacer(14))
+        }
 
         // ── 标签 ──
         stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_alias", comment: "")))
@@ -170,8 +197,8 @@ final class ModelEditViewController: UIViewController {
         stack.addArrangedSubview(makeCardField(aliasField, placeholder: NSLocalizedString("edit.placeholder_alias", comment: "")))
         stack.addArrangedSubview(makeSpacer(12))
 
-        if !isBuiltInAgent {
-            // ── API Key (hidden for built-in agent) ──
+        if !isBuiltInAgent && !isOfficialProvider {
+            // ── API Key (hidden for built-in & official) ──
             stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_apikey", comment: "")))
             apiKeyField.isSecureTextEntry = true
             apiKeyField.autocapitalizationType = .none
@@ -213,36 +240,70 @@ final class ModelEditViewController: UIViewController {
         stack.addArrangedSubview(makeConnectionStatusCard())
         stack.addArrangedSubview(makeSpacer(8))
 
-        if !isBuiltInAgent {
+        // ── Utility Buttons: test only for official; test + refresh for third-party ──
+        if isOfficialProvider {
+            stack.addArrangedSubview(makeOfficialTestButtonRow())
+            stack.addArrangedSubview(makeSpacer(8))
+        } else if !isBuiltInAgent {
             stack.addArrangedSubview(makeUtilityButtonsRow())
             stack.addArrangedSubview(makeSpacer(8))
         }
 
-        // ── 模型名称 ──
-        stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_model", comment: "")))
-        modelNameField.autocapitalizationType = .none
-        modelNameField.autocorrectionType = .no
-        modelNameField.text = provider.defaultModel
-        if isBuiltInAgent {
-            modelNameField.isEnabled = false
-            modelNameField.alpha = 0.6
-        }
-        stack.addArrangedSubview(makeCardField(modelNameField, placeholder: provider.defaultModel))
-        if !isBuiltInAgent {
-            stack.addArrangedSubview(makeHint(NSLocalizedString("edit.model_hint", comment: "")))
-            selectModelButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.select_builtin", comment: "") : NSLocalizedString("edit.select_fetched", comment: ""), for: .normal)
-            selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
-            selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
-            selectModelButton.backgroundColor = PixelTheme.bgMedium
-            selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
-            selectModelButton.layer.borderWidth = PixelTheme.borderWidth
-            selectModelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
-            selectModelButton.translatesAutoresizingMaskIntoConstraints = false
-            selectModelButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
-            selectModelButton.addTarget(self, action: #selector(selectFetchedModel), for: .touchUpInside)
-            selectModelButton.isEnabled = !fetchedModels.isEmpty
-            selectModelButton.alpha = fetchedModels.isEmpty ? 0.45 : 1.0
-            stack.addArrangedSubview(selectModelButton)
+        // ── 模型名称 (hidden for QingTeng; selector for Plus/Pro/Max; full for third-party) ──
+        if isOfficialProvider {
+            if officialShowsModelPicker {
+                // Plus/Pro/Max: fixed model selector
+                modelNameField.text = provider.defaultModel
+                stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_model", comment: "")))
+                selectModelButton.setTitle(NSLocalizedString("edit.select_builtin", comment: ""), for: .normal)
+                selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
+                selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
+                selectModelButton.backgroundColor = PixelTheme.bgMedium
+                selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
+                selectModelButton.layer.borderWidth = PixelTheme.borderWidth
+                selectModelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
+                selectModelButton.translatesAutoresizingMaskIntoConstraints = false
+                selectModelButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
+                selectModelButton.addTarget(self, action: #selector(selectFetchedModel), for: .touchUpInside)
+                selectModelButton.isEnabled = true
+                selectModelButton.alpha = 1.0
+                stack.addArrangedSubview(selectModelButton)
+
+                // Read-only display of selected model
+                modelNameField.isEnabled = false
+                modelNameField.alpha = 0.6
+                modelNameField.autocapitalizationType = .none
+                stack.addArrangedSubview(makeCardField(modelNameField, placeholder: provider.defaultModel))
+            } else {
+                // QingTeng: model is fixed, hidden from user
+                modelNameField.text = provider.defaultModel
+            }
+        } else {
+            stack.addArrangedSubview(makeSectionTitle(NSLocalizedString("edit.section_model", comment: "")))
+            modelNameField.autocapitalizationType = .none
+            modelNameField.autocorrectionType = .no
+            modelNameField.text = provider.defaultModel
+            if isBuiltInAgent {
+                modelNameField.isEnabled = false
+                modelNameField.alpha = 0.6
+            }
+            stack.addArrangedSubview(makeCardField(modelNameField, placeholder: provider.defaultModel))
+            if !isBuiltInAgent {
+                stack.addArrangedSubview(makeHint(NSLocalizedString("edit.model_hint", comment: "")))
+                selectModelButton.setTitle(usesStaticCatalog ? NSLocalizedString("edit.select_builtin", comment: "") : NSLocalizedString("edit.select_fetched", comment: ""), for: .normal)
+                selectModelButton.titleLabel?.font = PixelTheme.boldFont(size: 14)
+                selectModelButton.setTitleColor(PixelTheme.textCream, for: .normal)
+                selectModelButton.backgroundColor = PixelTheme.bgMedium
+                selectModelButton.layer.cornerRadius = PixelTheme.cornerRadius
+                selectModelButton.layer.borderWidth = PixelTheme.borderWidth
+                selectModelButton.layer.borderColor = PixelTheme.borderWarm.cgColor
+                selectModelButton.translatesAutoresizingMaskIntoConstraints = false
+                selectModelButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
+                selectModelButton.addTarget(self, action: #selector(selectFetchedModel), for: .touchUpInside)
+                selectModelButton.isEnabled = !fetchedModels.isEmpty
+                selectModelButton.alpha = fetchedModels.isEmpty ? 0.45 : 1.0
+                stack.addArrangedSubview(selectModelButton)
+            }
         }
         stack.addArrangedSubview(makeSpacer(24))
 
@@ -372,6 +433,145 @@ final class ModelEditViewController: UIViewController {
         ])
 
         return card
+    }
+
+    /// Info card for Plus/Pro/Max showing tier benefits and available models.
+    private func makeFreeTierInfoCard() -> UIView {
+        let card = UIView()
+        card.backgroundColor = PixelTheme.bgMedium
+        card.layer.cornerRadius = PixelTheme.cornerRadius
+        card.layer.borderWidth = PixelTheme.borderWidth
+        card.layer.borderColor = PixelTheme.borderWarm.cgColor
+        card.translatesAutoresizingMaskIntoConstraints = false
+
+        let title = UILabel()
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.font = PixelTheme.headerFont(size: 18)
+        title.textColor = PixelTheme.textCream
+        title.text = providerDefinition.selectionTitle
+
+        let desc = UILabel()
+        desc.translatesAutoresizingMaskIntoConstraints = false
+        desc.font = PixelTheme.bodyFont(size: 14)
+        desc.textColor = PixelTheme.textTan
+        desc.numberOfLines = 0
+        let limit = mode.provider.officialAgentLimit
+        desc.text = String(format: NSLocalizedString("edit.free_tier_desc", comment: ""), limit)
+
+        // Notice text + subscribe link
+        let noticeText = NSLocalizedString("edit.free_tier_notice", comment: "")
+        let subscribeText = NSLocalizedString("edit.free_tier_subscribe", comment: "")
+        let fullNotice = noticeText + subscribeText
+
+        let noticeLabel = UILabel()
+        noticeLabel.translatesAutoresizingMaskIntoConstraints = false
+        noticeLabel.numberOfLines = 0
+        noticeLabel.isUserInteractionEnabled = true
+
+        let attrString = NSMutableAttributedString(
+            string: fullNotice,
+            attributes: [
+                .font: PixelTheme.bodyFont(size: 13),
+                .foregroundColor: PixelTheme.accentAmber.withAlphaComponent(0.8),
+            ]
+        )
+        let subscribeRange = (fullNotice as NSString).range(of: subscribeText)
+        attrString.addAttributes([
+            .foregroundColor: PixelTheme.accentGreen,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ], range: subscribeRange)
+        noticeLabel.attributedText = attrString
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(openSubscription))
+        noticeLabel.addGestureRecognizer(tap)
+
+        card.addSubview(title)
+        card.addSubview(desc)
+        card.addSubview(noticeLabel)
+
+        NSLayoutConstraint.activate([
+            title.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            title.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            title.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+
+            desc.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
+            desc.leadingAnchor.constraint(equalTo: title.leadingAnchor),
+            desc.trailingAnchor.constraint(equalTo: title.trailingAnchor),
+
+            noticeLabel.topAnchor.constraint(equalTo: desc.bottomAnchor, constant: 10),
+            noticeLabel.leadingAnchor.constraint(equalTo: title.leadingAnchor),
+            noticeLabel.trailingAnchor.constraint(equalTo: title.trailingAnchor),
+            noticeLabel.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+        ])
+
+        return card
+    }
+
+    @objc private func openSubscription() {
+        dismiss(animated: true) { [weak self] in
+            // Navigate to subscription page via the settings nav controller
+            if let nav = self?.presentingViewController as? UINavigationController {
+                let vc = SubscriptionViewController()
+                nav.pushViewController(vc, animated: true)
+            }
+        }
+    }
+
+    private func makeOfficialTierInfoCard() -> UIView {
+        let card = UIView()
+        card.backgroundColor = PixelTheme.bgMedium
+        card.layer.cornerRadius = PixelTheme.cornerRadius
+        card.layer.borderWidth = PixelTheme.borderWidth
+        card.layer.borderColor = PixelTheme.borderWarm.cgColor
+        card.translatesAutoresizingMaskIntoConstraints = false
+
+        let title = UILabel()
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.font = PixelTheme.headerFont(size: 18)
+        title.textColor = PixelTheme.textCream
+        title.text = providerDefinition.selectionTitle
+
+        let subtitle = UILabel()
+        subtitle.translatesAutoresizingMaskIntoConstraints = false
+        subtitle.font = PixelTheme.bodyFont(size: 14)
+        subtitle.textColor = PixelTheme.textTan
+        subtitle.numberOfLines = 0
+
+        let tierName = mode.provider.requiredSubscriptionTier.displayName
+        let limit = mode.provider.officialAgentLimit
+        let models = OfficialProviderConfig.models(for: mode.provider)
+        let modelList = models.joined(separator: "\n")
+        subtitle.text = String(format: NSLocalizedString("edit.official_tier_desc", comment: ""), tierName, limit) + "\n\n" + modelList
+
+        card.addSubview(title)
+        card.addSubview(subtitle)
+
+        NSLayoutConstraint.activate([
+            title.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            title.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            title.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+
+            subtitle.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
+            subtitle.leadingAnchor.constraint(equalTo: title.leadingAnchor),
+            subtitle.trailingAnchor.constraint(equalTo: title.trailingAnchor),
+            subtitle.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+        ])
+
+        return card
+    }
+
+    /// Single "Test Connection" button for official providers.
+    private func makeOfficialTestButtonRow() -> UIView {
+        testConnectionButton.setTitle(NSLocalizedString("edit.test_connection", comment: ""), for: .normal)
+        testConnectionButton.titleLabel?.font = PixelTheme.boldFont(size: 16)
+        testConnectionButton.setTitleColor(PixelTheme.textWhite, for: .normal)
+        testConnectionButton.backgroundColor = PixelTheme.accentGreen.withAlphaComponent(0.6)
+        testConnectionButton.layer.cornerRadius = PixelTheme.cornerRadius
+        testConnectionButton.layer.borderWidth = PixelTheme.borderWidth
+        testConnectionButton.layer.borderColor = PixelTheme.accentGreen.withAlphaComponent(0.3).cgColor
+        testConnectionButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        testConnectionButton.addTarget(self, action: #selector(testConnection), for: .touchUpInside)
+        return testConnectionButton
     }
 
     private func makeMetaPill(_ key: String, value: String) -> UIView {
@@ -781,8 +981,8 @@ final class ModelEditViewController: UIViewController {
     @objc private func saveModel() {
         let apiKey = currentAPIKey()
 
-        // Built-in agent: skip API key validation, keep existing key
-        if !isBuiltInAgent {
+        // Official providers & built-in agent: skip API key validation
+        if !isBuiltInAgent && !isOfficialProvider {
             guard !apiKey.isEmpty else {
                 showAlert(NSLocalizedString("edit.enter_apikey", comment: ""))
                 return
@@ -860,12 +1060,33 @@ final class ModelEditViewController: UIViewController {
 
     @objc private func testConnection() {
         let apiKey = currentAPIKey()
+
+        #if DEBUG
+        let provider = mode.provider
+        print("[TestConnection] Provider: \(provider.rawValue), isOfficial: \(isOfficialProvider)")
+        print("[TestConnection] API key length: \(apiKey.count), empty: \(apiKey.isEmpty)")
+        if isOfficialProvider {
+            print("[TestConnection] OfficialConfig key length: \(OfficialProviderConfig.apiKey(for: provider).count)")
+        }
+        #endif
+
         guard !apiKey.isEmpty else {
-            showAlert(NSLocalizedString("edit.test_need_key", comment: ""))
+            if isOfficialProvider {
+                showAlert(NSLocalizedString("edit.official_key_missing", comment: ""))
+            } else {
+                showAlert(NSLocalizedString("edit.test_need_key", comment: ""))
+            }
             return
         }
 
         let draft = makeDraftConfig()
+
+        #if DEBUG
+        print("[TestConnection] Draft config: baseURL='\(draft.baseURL)' model='\(draft.modelName)' appendV1=\(draft.appendV1)")
+        print("[TestConnection] resolvedBaseURL='\(draft.resolvedBaseURL)'")
+        print("[TestConnection] Full URL='\(draft.resolvedBaseURL + draft.provider.chatPath)'")
+        #endif
+
         pendingConnectionStatus = .unknown
         pendingConnectionMessage = NSLocalizedString("edit.testing", comment: "")
         updateConnectionStatusUI()
@@ -966,6 +1187,10 @@ final class ModelEditViewController: UIViewController {
         let resolvedAlias = alias.isEmpty ? provider.displayName : alias
         let resolvedModel = modelName.isEmpty ? provider.defaultModel : modelName
 
+        // Official providers always use their definition's defaultAppendV1;
+        // user-added providers read the toggle.
+        let useV1 = provider.isOfficialProvider ? provider.definition.defaultAppendV1 : v1Toggle.isOn
+
         switch mode {
         case .add:
             return ModelConfig(
@@ -973,7 +1198,7 @@ final class ModelEditViewController: UIViewController {
                 provider: provider,
                 baseURL: baseURL,
                 modelName: resolvedModel,
-                appendV1: v1Toggle.isOn,
+                appendV1: useV1,
                 connectionStatus: pendingConnectionStatus,
                 connectionMessage: pendingConnectionMessage
             )
@@ -984,7 +1209,7 @@ final class ModelEditViewController: UIViewController {
                 provider: provider,
                 baseURL: baseURL,
                 modelName: resolvedModel,
-                appendV1: v1Toggle.isOn,
+                appendV1: useV1,
                 connectionStatus: pendingConnectionStatus,
                 connectionMessage: pendingConnectionMessage
             )
@@ -992,7 +1217,11 @@ final class ModelEditViewController: UIViewController {
     }
 
     private func currentAPIKey() -> String {
-        (apiKeyField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        // Official providers: API key comes from bundled config
+        if isOfficialProvider {
+            return OfficialProviderConfig.apiKey(for: mode.provider)
+        }
+        return (apiKeyField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Keyboard

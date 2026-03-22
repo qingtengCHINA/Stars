@@ -76,6 +76,18 @@ final class WorldCommandRegistry {
             WorldCommandDescriptor(name: "/attack_ranged", action: .attack, description: "Attack the target tile with the ranged weapon.", defaultBuildType: nil, defaultWeapon: "ranged", basedOn: "/attack_ranged"),
             WorldCommandDescriptor(name: "/harass", action: .attack, description: "Pressure a target from range while staying mobile.", defaultBuildType: nil, defaultWeapon: "ranged", basedOn: "/harass"),
             WorldCommandDescriptor(name: "/demolish", action: .attack, description: "Destroy a structure (including your own).", defaultBuildType: nil, defaultWeapon: "melee", basedOn: "/demolish"),
+
+            // === Economy ===
+            WorldCommandDescriptor(name: "/pay", action: .talk, description: "Send stars to another agent. Set target.recipientID and target.starsAmount.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/pay"),
+            WorldCommandDescriptor(name: "/offer_trade", action: .talk, description: "Offer a trade: pay stars in exchange for something. Set target.recipientID, target.starsAmount, and describe what you want in speech.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/offer_trade"),
+            WorldCommandDescriptor(name: "/accept_trade", action: .talk, description: "Accept a pending trade offer. Set target.recipientID to the offeror's ID prefix.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/accept_trade"),
+            WorldCommandDescriptor(name: "/decline_trade", action: .talk, description: "Decline a pending trade offer. Set target.recipientID to the offeror's ID prefix.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/decline_trade"),
+            WorldCommandDescriptor(name: "/bounty", action: .talk, description: "Post a bounty on another agent. Set target.recipientID (target agent), target.starsAmount (reward), and describe the reason in speech.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/bounty"),
+            WorldCommandDescriptor(name: "/cancel_bounty", action: .talk, description: "Cancel a bounty you posted. Set target.recipientID to the bounty target's ID prefix.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/cancel_bounty"),
+            WorldCommandDescriptor(name: "/hire", action: .talk, description: "Hire another agent for a task: pay stars upfront. Set target.recipientID and target.starsAmount. Describe the task in speech.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/hire"),
+            WorldCommandDescriptor(name: "/buy_weapon", action: .talk, description: "Buy a weapon from the shop. Set target.weapon to the weapon ID.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/buy_weapon"),
+            WorldCommandDescriptor(name: "/buy_revival", action: .talk, description: "Buy a Revival Card for 150⭐. Revive yourself or any dead agent.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/buy_revival"),
+            WorldCommandDescriptor(name: "/revive", action: .talk, description: "Use a Revival Card to revive a dead agent. Set target.recipientID.", defaultBuildType: nil, defaultWeapon: nil, basedOn: "/revive"),
         ]
 
         builtinCommands = Dictionary(uniqueKeysWithValues: builtins.map { ($0.name, $0) })
@@ -176,7 +188,8 @@ final class WorldCommandRegistry {
             "World briefing: Stars is a pixel sandbox with movement, combat (10 damage per attack), building (walls, traps, houses), and global conversations.",
             "Command briefing: commands include /move, /explore, /scout, /patrol, /flee, /retreat, /defense, /follow, /build_wall, /build_trap, /build_house, /fortify, /attack_melee, /attack_ranged, /harass, /demolish, /talk, /report, /respond, /wave, /ally, /challenge, /warn, /treaty, /idle, /hold, /observe, /rest, /guard, /enter_house.",
             "Owner briefing: messages from 主人 are high-priority instructions. Follow them when feasible and explain if you cannot.",
-            "Star system: killing an agent earns 1 Star, discovering a new area earns 1 Star. Stars will unlock future upgrades.",
+            "Star system: killing an agent earns 1 Star, discovering a new area earns 1 Star. Stars are CURRENCY — spend them to build, trade, hire, and post bounties.",
+            "Economy: /pay sends stars directly. /offer_trade proposes a deal (escrow). /accept_trade / /decline_trade respond. /bounty posts a kill reward. /hire pays upfront for services. Building costs stars: wall=2⭐, trap=3⭐, house=5⭐.",
             "House rules: build a house (HP:150) you own. Use /rest or /enter_house to go home. Rest idle inside when HP ≤ 50 for 10 hours → heal 5 HP. Agents with HP > 50 cannot rest in houses.",
             "Near-death: when HP ≤ 5, speed is halved and you pulse red. Retreat or seek shelter immediately.",
             "Night effects: during 19:00–05:00, all agents move 30% slower. Night favors stealth and defense.",

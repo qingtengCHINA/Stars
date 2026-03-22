@@ -51,6 +51,16 @@ struct ProviderDefinition {
 }
 
 enum ProviderCatalog {
+
+    /// Official providers shown at the top of the picker, filtered by subscription tier.
+    static let officialProviders: [APIProvider] = [
+        .starsMax,
+        .starsPro,
+        .starsPlus,
+        .starsOfficial,
+    ]
+
+    /// Third-party providers always visible in the picker.
     static let orderedProviders: [APIProvider] = [
         .openai,
         .anthropic,
@@ -76,6 +86,85 @@ enum ProviderCatalog {
     ]
 
     static let definitions: [APIProvider: ProviderDefinition] = [
+        // ── Official Providers ──
+        .starsOfficial: ProviderDefinition(
+            provider: .starsOfficial,
+            displayName: "QingTeng",
+            selectionTitle: "QingTeng（群星官方）",
+            selectionSubtitle: "免费系统模型，由开发者提供",
+            defaultBaseURL: "https://openrouter.ai/api",
+            apiKeyPlaceholder: "",
+            defaultModel: "openrouter/free",
+            defaultAppendV1: true,
+            chatPath: "/chat/completions",
+            protocolFamily: .openAIChatCompletions,
+            authMode: .bearer,
+            modelCatalogMode: .staticCatalog,
+            catalogModels: OfficialProviderConfig.models(for: .starsOfficial),
+            docsURL: "",
+            protocolLabel: "Stars Official",
+            authLabel: "System",
+            contextWindowTokens: 128_000
+        ),
+        .starsPlus: ProviderDefinition(
+            provider: .starsPlus,
+            displayName: "Stars Plus",
+            selectionTitle: "Stars Plus",
+            selectionSubtitle: "Plus 订阅专属模型",
+            defaultBaseURL: "https://openrouter.ai/api",
+            apiKeyPlaceholder: "",
+            defaultModel: OfficialProviderConfig.defaultModel(for: .starsPlus),
+            defaultAppendV1: true,
+            chatPath: "/chat/completions",
+            protocolFamily: .openAIChatCompletions,
+            authMode: .bearer,
+            modelCatalogMode: .staticCatalog,
+            catalogModels: OfficialProviderConfig.models(for: .starsPlus),
+            docsURL: "",
+            protocolLabel: "Stars Plus",
+            authLabel: "System",
+            contextWindowTokens: 128_000
+        ),
+        .starsPro: ProviderDefinition(
+            provider: .starsPro,
+            displayName: "Stars Pro",
+            selectionTitle: "Stars Pro",
+            selectionSubtitle: "Pro 订阅专属模型",
+            defaultBaseURL: "https://openrouter.ai/api",
+            apiKeyPlaceholder: "",
+            defaultModel: OfficialProviderConfig.defaultModel(for: .starsPro),
+            defaultAppendV1: true,
+            chatPath: "/chat/completions",
+            protocolFamily: .openAIChatCompletions,
+            authMode: .bearer,
+            modelCatalogMode: .staticCatalog,
+            catalogModels: OfficialProviderConfig.models(for: .starsPro),
+            docsURL: "",
+            protocolLabel: "Stars Pro",
+            authLabel: "System",
+            contextWindowTokens: 128_000
+        ),
+        .starsMax: ProviderDefinition(
+            provider: .starsMax,
+            displayName: "Stars Max",
+            selectionTitle: "Stars Max",
+            selectionSubtitle: "Max 订阅专属模型",
+            defaultBaseURL: "https://openrouter.ai/api",
+            apiKeyPlaceholder: "",
+            defaultModel: OfficialProviderConfig.defaultModel(for: .starsMax),
+            defaultAppendV1: true,
+            chatPath: "/chat/completions",
+            protocolFamily: .openAIChatCompletions,
+            authMode: .bearer,
+            modelCatalogMode: .staticCatalog,
+            catalogModels: OfficialProviderConfig.models(for: .starsMax),
+            docsURL: "",
+            protocolLabel: "Stars Max",
+            authLabel: "System",
+            contextWindowTokens: 200_000
+        ),
+
+        // ── Third-party Providers ──
         .openai: ProviderDefinition(
             provider: .openai,
             displayName: "OpenAI",

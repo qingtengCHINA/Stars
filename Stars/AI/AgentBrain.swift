@@ -34,6 +34,9 @@ final class AgentBrain {
     // Death control — when stopped, no API calls are made
     private(set) var isStopped = false
 
+    // Consecutive API failure counter — drives fallback behavior & backoff
+    private var consecutiveFailures = 0
+
     // MARK: - Adaptive SOUL Reflection Tracking
 
     /// Counter of significant events since last SOUL reflection.
@@ -50,6 +53,9 @@ final class AgentBrain {
     /// Closure provided by AgentManager:
     ///   (excludeID, worldPosition, tileRadius) → [EntityInfo]
     var nearbyEntitiesProvider: ((String, CGPoint, Int) -> [EntityInfo])?
+
+    /// Closure provided by AgentManager: returns leaderboard entries (name, stars, isDead, entityID).
+    var leaderboardProvider: (() -> [(name: String, stars: Int, isDead: Bool, entityID: String)])?
 
     // MARK: - Init
 
@@ -112,7 +118,35 @@ final class AgentBrain {
               let config = ModelManager.shared.config(for: configID)
         else { return }
 
-        guard LLMService.shared.reserveSlot() else { return }
+        // Subscription-gated: pause agents that exceed tier limits
+        if SubscriptionStore.shared.isAgentPaused(config: config) {
+            hasQueuedThink = false
+            tickAccumulator = 0
+
+            // If the user sent a message, give feedback instead of silent "正在思考..."
+            if agent.pendingOwnerReplies > 0 {
+                let tierName = config.provider.requiredSubscriptionTier.displayName
+                let msg = String(
+                    format: NSLocalizedString("chat.agent_paused", comment: ""),
+                    tierName
+                )
+                agent.recordSystemMessage(msg, consumesOwnerReply: true)
+            }
+            return
+        }
+
+        // Priority: agents with pending owner replies get extra slots
+        let hasPendingReply = agent.pendingOwnerReplies > 0
+        if hasPendingReply {
+            guard LLMService.shared.reservePrioritySlot() else {
+                #if DEBUG
+                print("[Brain] ⏳ \(agent.displayName) waiting for priority slot (active: \(LLMService.shared.activeRequests))")
+                #endif
+                return
+            }
+        } else {
+            guard LLMService.shared.reserveSlot() else { return }
+        }
 
         thinkCount += 1
         let prompt = buildContextPrompt(using: config)
@@ -128,7 +162,11 @@ final class AgentBrain {
             }
 
             do {
-                let (response, rawResponseText) = try await LLMService.shared.sendPromptWithRaw(prompt, using: config)
+                // Only retry parse failures when the player is waiting for a reply.
+                // Autonomous thinks skip retry to free up slots faster.
+                let (response, rawResponseText) = try await LLMService.shared.sendPromptWithRaw(prompt, using: config, allowRetry: hasPendingReply)
+                self?.consecutiveFailures = 0
+                self?.tickInterval = 5.0  // restore normal rate on success
                 if let agent {
                     // Track response tokens
                     let responseTokens = ContextBudgetMonitor.estimateTokens(for: rawResponseText)
@@ -146,10 +184,25 @@ final class AgentBrain {
                     ActionResolver.execute(response, on: agent)
                 }
             } catch {
-                if let agent, agent.pendingOwnerReplies > 0 {
-                    let message = "模型调用失败：\(error.localizedDescription)"
-                    agent.recordSystemMessage(message, consumesOwnerReply: true)
-                    agent.memory.record(type: .talk, content: message)
+                if let agent {
+                    self?.consecutiveFailures += 1
+                    let failCount = self?.consecutiveFailures ?? 1
+
+                    if agent.pendingOwnerReplies > 0 {
+                        let message = "模型调用失败：\(error.localizedDescription)"
+                        agent.recordSystemMessage(message, consumesOwnerReply: true)
+                    }
+
+                    // Fallback behavior: after failures, agent does something instead of freezing
+                    if failCount >= 2 {
+                        // After 2+ failures, give the agent a random idle/explore action
+                        agent.currentAction = .idle
+                        agent.currentThought = "⚠️ Model unreachable — waiting..."
+                        agent.memory.record(type: .observe, content: "Model call failed (\(failCount)x): \(error.localizedDescription)")
+
+                        // Slow down think rate to avoid hammering a failing API
+                        self?.tickInterval = min(15.0, 5.0 + Double(failCount) * 2.0)
+                    }
                 }
                 print("[Brain] \(agent?.displayName ?? "?") error: \(error.localizedDescription)")
             }
@@ -185,15 +238,16 @@ final class AgentBrain {
 
         let responseSection = """
         Decide your next action. Respond with a single JSON object ONLY:
-        {"thought":"inner monologue","command":"/move","action":"idle|move|build|attack|talk","speech":"what you say out loud","target":{"x":0,"y":0,"buildType":"wall","weapon":"melee"},"customCommand":null,"soulReflection":null}
+        {"thought":"inner monologue","command":"/move","action":"idle|move|build|attack|talk","speech":"what you say out loud","target":{"x":0,"y":0,"buildType":"wall","weapon":"melee","starsAmount":0,"recipientID":""},"customCommand":null,"soulReflection":null}
 
         Rules:
         - command should be one of the world commands or a previously learned custom alias
         - action: idle, move, build, attack, talk
         - speech is required when action is talk, otherwise it may be null
         - target.x / target.y: integer tile coordinates
-        - build: set target.buildType to "wall" or "trap"
+        - build: set target.buildType to "wall", "trap", or "house". Costs: wall=\(EconomyConfig.shared.wallCost)⭐, trap=\(EconomyConfig.shared.trapCost)⭐, house=\(EconomyConfig.shared.houseCost)⭐
         - attack: set target.weapon to "melee" or "ranged"
+        - economy: set target.recipientID (entity ID prefix) and target.starsAmount for /pay, /offer_trade, /bounty, /hire, /accept_trade, /decline_trade, /cancel_bounty
         - idle / talk: target may be null
         - customCommand is optional; only use it when creating a safe alias to an existing command
         \(soulReflectionClause)
@@ -244,6 +298,13 @@ final class AgentBrain {
                         compactedSummary: result.summary
                     )
                 }
+
+                // Auto-read constitution reminder after compaction
+                // (See Constitution § XII — agents must re-read rules after compaction)
+                agent.memory.record(
+                    type: .observe,
+                    content: "⚠️ Context compacted. Re-read the WORLD RULES (Constitution) in your prompt. Check: weapon inventory, economy commands, house defense, leaderboard, and your relationships/plans."
+                )
 
                 // Compaction is a significant event → trigger SOUL reflection soon
                 recordSignificantEvent()
@@ -351,13 +412,15 @@ final class AgentBrain {
 
         lines.append("""
         Your entity ID prefix: \(ownerPrefix) (structures you own show "owner:\(ownerPrefix)")
-        Equipment:
-        - Melee weapon: 10 damage, range 1 tile, cooldown 0.8s
-        - Ranged weapon: 10 damage, range 5 tiles, cooldown 1.2s
-        - You can build: walls (HP:100, blocks movement), traps (HP:30, deals 25 damage on contact), or houses (HP:150, you own it)
-        Stars earned: \(agent.stars) | Explored chunks: \(agent.visitedChunks.count)\(nearDeathWarning)\(nightWarning)
+        You can build: walls (2⭐, HP:100), traps (3⭐, HP:30, deals 25 damage), houses (5⭐, HP:150)
+        Stars: \(agent.stars)⭐ | Explored chunks: \(agent.visitedChunks.count) | Revival Cards: \(agent.revivalCards)\(nearDeathWarning)\(nightWarning)
         Rules:
-        - Killing another agent earns you 1 Star. Discovering a new area earns 1 Star.
+        - Killing another agent earns 1⭐. Discovering a new area earns 1⭐.
+        - Stars are CURRENCY: spend to build, trade, hire, post bounties, buy weapons, buy revival cards.
+        - Economy commands: /pay, /offer_trade, /accept_trade, /decline_trade, /bounty, /cancel_bounty, /hire, /buy_weapon, /buy_revival, /revive.
+          All economy commands use target.recipientID (entity ID prefix) and target.starsAmount.
+        - /buy_weapon: say weapon ID in speech to buy. /buy_revival: buy revival card (150⭐). /revive: use a card to revive a dead agent.
+        - When attacking, set target.weapon to the weapon ID (e.g. "sword", "rifle", "rocket_launcher"). Use melee/ranged as fallback.
         - Resting in your own house for 10 hours heals 5 HP (only when HP ≤ 50).
         - Agents with HP > 50 cannot rest in houses.
         - To rest in your house: use /rest or /enter_house (system auto-navigates), or MOVE to its tile coordinates then idle. Healing begins automatically.
@@ -417,6 +480,46 @@ final class AgentBrain {
             lines.append(contextualSection)
         }
 
+        // Weapon inventory — what this agent already owns
+        let weaponInventory = WeaponCatalog.inventoryPromptSection(ownedWeapons: agent.ownedWeapons, weaponAmmo: agent.weaponAmmo)
+        if !weaponInventory.isEmpty {
+            lines.append("")
+            lines.append(weaponInventory)
+        }
+
+        // Weapon shop — what's available to buy (only shows weapons not yet owned)
+        let weaponShop = WeaponCatalog.shopPromptSection(ownedWeapons: agent.ownedWeapons, currentStars: agent.stars)
+        lines.append("")
+        lines.append(weaponShop)
+
+        // Economy: pending trades for this agent
+        let tradeSection = TradeManager.shared.promptSection(for: agent.entityID)
+        if !tradeSection.isEmpty {
+            lines.append("")
+            lines.append(tradeSection)
+        }
+
+        // Economy: global bounty board
+        let bountySection = BountyBoard.shared.promptSection()
+        if !bountySection.isEmpty {
+            lines.append("")
+            lines.append(bountySection)
+        }
+
+        // Leaderboard — agents ranked by stars (sorted highest → lowest)
+        if let rawRankings = leaderboardProvider?(), !rawRankings.isEmpty {
+            let rankings = rawRankings.sorted { $0.stars > $1.stars }
+            lines.append("")
+            lines.append("⭐ Leaderboard / 排行榜 (ranked by Stars, highest first):")
+            for (idx, entry) in rankings.enumerated() {
+                let rank = idx + 1
+                let marker = entry.entityID.hasPrefix(agent.entityID.prefix(8).description) ? " ← YOU" : ""
+                let dead = entry.isDead ? " 💀" : ""
+                let bounty = (rank == 1 && rankings.count >= 2 && entry.stars > 0) ? " 🎯BOUNTY(+\(EconomyConfig.shared.systemBountyReward)⭐)" : ""
+                lines.append("  #\(rank) \(entry.name): \(entry.stars)⭐\(dead)\(bounty)\(marker)")
+            }
+        }
+
         if !pendingMessages.isEmpty {
             lines.append("Messages you just received:")
             for message in pendingMessages {
@@ -438,6 +541,20 @@ final class AgentBrain {
         if !agentsSection.isEmpty {
             lines.append("")
             lines.append(agentsSection)
+        }
+
+        // Player-editable command rules
+        let commandsRulesSection = CommandsFile.shared.promptSection
+        if !commandsRulesSection.isEmpty {
+            lines.append("")
+            lines.append(commandsRulesSection)
+        }
+
+        // Player-editable economy rules
+        let economyRulesSection = EconomyFile.shared.promptSection
+        if !economyRulesSection.isEmpty {
+            lines.append("")
+            lines.append(economyRulesSection)
         }
 
         // SOUL (per-agent personality)
@@ -463,6 +580,12 @@ final class AgentBrain {
         guard !isStopped else { return }
         guard hasQueuedThink else { return }
         guard !isThinking else { return }
-        think()
+
+        // Only drain immediately when the player is waiting for a reply.
+        // Otherwise, yield the slot to let other agents think fairly.
+        // The regular update() tick will re-trigger this agent next cycle.
+        if let agent, agent.pendingOwnerReplies > 0 {
+            think()
+        }
     }
 }

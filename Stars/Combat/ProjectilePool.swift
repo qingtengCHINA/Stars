@@ -13,18 +13,24 @@ final class ProjectilePool {
     static let shared = ProjectilePool()
 
     private var pool: [Projectile] = []
-    private let maxPoolSize = 32
+    private let maxPoolSize = 48  // increased for multi-pellet weapons
 
     /// Borrow a projectile from the pool, or create one if empty.
     func acquire(ownerID: String, damage: Int,
-                 direction: CGVector, speed: CGFloat) -> Projectile {
+                 direction: CGVector, speed: CGFloat,
+                 weaponID: String = "pistol",
+                 homingTarget: Agent? = nil) -> Projectile {
         if let reused = pool.popLast() {
             reused.reconfigure(ownerID: ownerID, damage: damage,
-                               direction: direction, speed: speed)
+                               direction: direction, speed: speed,
+                               weaponID: weaponID,
+                               homingTarget: homingTarget)
             return reused
         }
         return Projectile(ownerID: ownerID, damage: damage,
-                          direction: direction, speed: speed)
+                          direction: direction, speed: speed,
+                          weaponID: weaponID,
+                          homingTarget: homingTarget)
     }
 
     /// Return a projectile to the pool instead of deallocating it.

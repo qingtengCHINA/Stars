@@ -71,6 +71,12 @@ final class ActionResolver {
     /// Set by AgentManager to look up the agent's own house tile coordinates.
     static var findOwnHouse: ((Agent) -> (tileX: Int, tileY: Int)?)?
 
+    /// Set by AgentManager to look up agents by entity ID (prefix match).
+    static var agentLookup: ((String) -> Agent?)?
+
+    /// Set by AgentManager to revive a dead agent (for Revival Card).
+    static var reviveAgent: ((Agent) -> Void)?
+
     // MARK: - Action Execution
 
     /// Apply an LLMResponse to the given agent.
@@ -107,6 +113,17 @@ final class ActionResolver {
                 failMemory: isRest
                     ? "Wanted to rest but I have no house. Need to /build_house first."
                     : "Cannot enter house — I don't own one. Build with /build_house first."
+            )
+            return
+        }
+
+        // --- Economy & item commands (all map to action: talk) ---
+        if let economyCommand = resolvedCommand.name as String?,
+           ["/pay", "/offer_trade", "/accept_trade", "/decline_trade", "/bounty", "/cancel_bounty", "/hire", "/buy_weapon", "/buy_revival", "/revive"].contains(economyCommand) {
+            handleEconomyCommand(
+                commandName: economyCommand,
+                agent: agent, response: response,
+                resolvedCommand: resolvedCommand, replyText: replyText
             )
             return
         }
@@ -167,7 +184,23 @@ final class ActionResolver {
 
         case .attack:
             let weaponName = response.target?.weapon ?? resolvedCommand.defaultWeapon ?? "melee"
-            agent.pendingWeapon = WeaponType(rawValue: weaponName) ?? .melee
+            // Resolve weapon: try catalog first, then fall back to melee/ranged
+            let resolvedWeaponID: String
+            if WeaponCatalog.all[weaponName] != nil && agent.ownedWeapons.contains(weaponName) {
+                resolvedWeaponID = weaponName
+            } else if weaponName == "ranged" || weaponName == "melee" {
+                // Legacy "melee"/"ranged" — use best owned weapon in that category
+                resolvedWeaponID = weaponName == "melee" ? "fist" : "pistol"
+            } else {
+                // Unknown weapon or not owned — fall back to fist/pistol
+                resolvedWeaponID = resolvedCommand.defaultWeapon == "ranged" ? "pistol" : "fist"
+                if WeaponCatalog.all[weaponName] != nil {
+                    agent.memory.record(type: .observe, content: "Don't own \(weaponName). Buy it with /buy_weapon first. Using default.")
+                }
+            }
+            agent.pendingWeaponID = resolvedWeaponID
+            agent.pendingWeapon = WeaponCatalog.physicsCategory(for: resolvedWeaponID)
+            let weaponLabel = WeaponCatalog.weapon(for: resolvedWeaponID).displayName
             if let t = response.target, let x = t.x, let y = t.y {
                 agent.moveTo(tileX: x, tileY: y)
                 if let replyText, !replyText.isEmpty {
@@ -176,12 +209,253 @@ final class ActionResolver {
                 }
                 agent.memory.record(
                     type: .combat,
-                    content: "Executing \(resolvedCommand.name): attacking (\(x), \(y)) with \(agent.pendingWeapon.rawValue)"
+                    content: "Executing \(resolvedCommand.name): attacking (\(x), \(y)) with \(weaponLabel)"
                 )
             }
         }
 
         handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+    }
+
+    // MARK: - Economy Commands
+
+    /// Handles all economy-related commands: /pay, /offer_trade, /accept_trade, /decline_trade, /bounty, /cancel_bounty, /hire.
+    private static func handleEconomyCommand(
+        commandName: String,
+        agent: Agent, response: LLMResponse,
+        resolvedCommand: ResolvedWorldCommand, replyText: String?
+    ) {
+        let target = response.target
+        let recipientPrefix = target?.recipientID?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let starsAmount = target?.starsAmount ?? 0
+
+        // Resolve recipient agent by prefix match
+        let recipient = resolveRecipient(prefix: recipientPrefix)
+
+        switch commandName {
+        case "/pay":
+            if let recipient, starsAmount > 0 {
+                let success = TradeManager.shared.pay(from: agent, to: recipient, amount: starsAmount)
+                if success {
+                    let speech = replyText ?? "Paid \(starsAmount)⭐ to \(recipient.displayName)."
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Pay failed: need recipientID and starsAmount > 0.")
+            }
+
+        case "/offer_trade":
+            if let recipient, starsAmount > 0 {
+                let description = response.speech ?? response.thought
+                let offer = TradeManager.shared.createOffer(
+                    offeror: agent,
+                    recipientID: recipient.entityID,
+                    recipientName: recipient.displayName,
+                    starsAmount: starsAmount,
+                    description: description
+                )
+                if offer != nil {
+                    let speech = replyText ?? "I offer \(starsAmount)⭐ to \(recipient.displayName)."
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    // Notify recipient to think about the offer
+                    recipient.forceNextThink = true
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Trade offer failed: need recipientID and starsAmount > 0.")
+            }
+
+        case "/accept_trade":
+            if !recipientPrefix.isEmpty {
+                let offerorAgent = resolveRecipient(prefix: recipientPrefix)
+                let success = TradeManager.shared.acceptTrade(acceptor: agent, offerorID: offerorAgent?.entityID ?? recipientPrefix)
+                if success {
+                    let speech = replyText ?? "Trade accepted!"
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    // Notify offeror about acceptance
+                    offerorAgent?.forceNextThink = true
+                    if let offerorAgent {
+                        offerorAgent.memory.record(type: .talk, content: "\(agent.displayName) accepted your trade offer!")
+                    }
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Accept trade failed: need recipientID (offeror's ID prefix).")
+            }
+
+        case "/decline_trade":
+            if !recipientPrefix.isEmpty {
+                let offerorAgent = resolveRecipient(prefix: recipientPrefix)
+                let success = TradeManager.shared.declineTrade(
+                    decliner: agent,
+                    offerorID: offerorAgent?.entityID ?? recipientPrefix,
+                    refundTo: offerorAgent
+                )
+                if success {
+                    let speech = replyText ?? "Trade declined."
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    offerorAgent?.forceNextThink = true
+                    if let offerorAgent {
+                        offerorAgent.memory.record(type: .talk, content: "\(agent.displayName) declined your trade offer. Stars refunded.")
+                    }
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Decline trade failed: need recipientID (offeror's ID prefix).")
+            }
+
+        case "/bounty":
+            if let recipient, starsAmount > 0 {
+                let reason = response.speech ?? response.thought
+                let bounty = BountyBoard.shared.postBounty(
+                    poster: agent,
+                    targetID: recipient.entityID,
+                    targetName: recipient.displayName,
+                    reward: starsAmount,
+                    reason: reason
+                )
+                if bounty != nil {
+                    let speech = replyText ?? "Bounty posted: \(starsAmount)⭐ on \(recipient.displayName)!"
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Bounty failed: need recipientID (target) and starsAmount > 0.")
+            }
+
+        case "/cancel_bounty":
+            if !recipientPrefix.isEmpty {
+                let targetAgent = resolveRecipient(prefix: recipientPrefix)
+                let success = BountyBoard.shared.cancelBounty(
+                    poster: agent,
+                    targetID: targetAgent?.entityID ?? recipientPrefix
+                )
+                if success {
+                    let speech = replyText ?? "Bounty cancelled."
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Cancel bounty failed: need recipientID (target's ID prefix).")
+            }
+
+        case "/hire":
+            if let recipient, starsAmount > 0 {
+                let success = TradeManager.shared.pay(from: agent, to: recipient, amount: starsAmount)
+                if success {
+                    let task = response.speech ?? response.thought
+                    let speech = replyText ?? "Hired \(recipient.displayName) for \(starsAmount)⭐."
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    agent.memory.record(type: .talk, content: "Hired \(recipient.displayName) for \(starsAmount)⭐: \"\(task)\"")
+                    recipient.memory.record(type: .talk, content: "Hired by \(agent.displayName) for \(starsAmount)⭐: \"\(task)\"")
+                    LongTermMemory.shared.recordSocialFact(
+                        entityID: recipient.entityID,
+                        content: "Hired by \(agent.displayName) for \(starsAmount)⭐ to: \"\(task)\""
+                    )
+                    recipient.forceNextThink = true
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Hire failed: need recipientID and starsAmount > 0.")
+            }
+
+        case "/buy_weapon":
+            let weaponID = response.target?.weapon ?? response.speech?.lowercased()
+                .components(separatedBy: .whitespaces)
+                .first(where: { WeaponCatalog.all[$0] != nil }) ?? ""
+            if let def = WeaponCatalog.all[weaponID] {
+                if def.cost == 0 {
+                    agent.memory.record(type: .observe, content: "\(def.displayName) is free — already have unlimited ammo.")
+                } else if agent.spendStars(def.cost, reason: "Buy \(def.displayName)") {
+                    agent.addAmmo(weaponID: weaponID, amount: def.ammoPerPurchase)
+                    let currentAmmo = agent.ammoCount(for: weaponID)
+                    agent.memory.record(type: .observe, content: "Purchased \(def.displayName) for \(def.cost)⭐! Got \(def.ammoPerPurchase) rounds (total ammo: \(currentAmmo)).")
+                    let speech = replyText ?? "Bought \(def.displayName) (\(def.ammoPerPurchase) rounds)!"
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    WorldEventLogStore.shared.append(
+                        category: .command, entityID: agent.entityID,
+                        title: "Weapon Purchased",
+                        message: "\(agent.displayName) bought \(def.displayName) for \(def.cost)⭐ (\(def.ammoPerPurchase) rounds)"
+                    )
+                } else {
+                    agent.memory.record(type: .observe, content: "Cannot afford \(def.displayName): need \(def.cost)⭐, have \(agent.stars)⭐.")
+                }
+            } else {
+                agent.memory.record(type: .observe, content: "Unknown weapon: \(weaponID). Check weapon shop for valid IDs.")
+            }
+
+        case "/buy_revival":
+            let revivalCost = EconomyConfig.shared.revivalCardCost
+            if agent.spendStars(revivalCost, reason: "Buy Revival Card") {
+                agent.revivalCards += 1
+                agent.memory.record(type: .observe, content: "Purchased a Revival Card for \(revivalCost)⭐! Total cards: \(agent.revivalCards)")
+                let speech = replyText ?? "Got a Revival Card! 💚"
+                agent.showSpeechBubble(speech)
+                agent.recordAgentReply(speech)
+                talkBroadcast?(agent, speech)
+                WorldEventLogStore.shared.append(
+                    category: .command, entityID: agent.entityID,
+                    title: "Revival Card Purchased",
+                    message: "\(agent.displayName) bought a Revival Card for \(revivalCost)⭐"
+                )
+            } else {
+                agent.memory.record(type: .observe, content: "Cannot afford Revival Card: need \(revivalCost)⭐, have \(agent.stars)⭐.")
+            }
+
+        case "/revive":
+            if agent.revivalCards <= 0 {
+                agent.memory.record(type: .observe, content: "No Revival Cards. Buy one with /buy_revival (150⭐).")
+            } else if !recipientPrefix.isEmpty, let target = recipient {
+                // Revive another agent
+                if target.isDead {
+                    agent.revivalCards -= 1
+                    reviveAgent?(target)
+                    agent.memory.record(type: .talk, content: "Used Revival Card to revive \(target.displayName)! Cards remaining: \(agent.revivalCards)")
+                    let speech = replyText ?? "Revived \(target.displayName)! 💚"
+                    agent.showSpeechBubble(speech)
+                    agent.recordAgentReply(speech)
+                    talkBroadcast?(agent, speech)
+                    LongTermMemory.shared.recordSocialFact(
+                        entityID: target.entityID,
+                        content: "Revived by \(agent.displayName) using a Revival Card."
+                    )
+                    WorldEventLogStore.shared.append(
+                        category: .command, entityID: agent.entityID,
+                        title: "Agent Revived",
+                        message: "\(agent.displayName) revived \(target.displayName) with a Revival Card"
+                    )
+                } else {
+                    agent.memory.record(type: .observe, content: "\(target.displayName) is not dead. Revival Card not used.")
+                }
+            } else if agent.isDead {
+                // Self-revive — handled by system since dead agents can't think
+                agent.memory.record(type: .observe, content: "Cannot self-revive while alive. Use /revive with recipientID to revive dead allies.")
+            } else {
+                agent.memory.record(type: .observe, content: "Revive failed: need recipientID of a dead agent, or be dead yourself.")
+            }
+
+        default:
+            break
+        }
+
+        agent.clearTarget()
+        handleSoulReflection(response, agent: agent, resolvedCommand: resolvedCommand)
+    }
+
+    /// Resolve an agent by entity ID prefix match.
+    private static func resolveRecipient(prefix: String) -> Agent? {
+        guard !prefix.isEmpty else { return nil }
+        return agentLookup?(prefix)
     }
 
     // MARK: - House Navigation (shared by /rest and /enter_house)

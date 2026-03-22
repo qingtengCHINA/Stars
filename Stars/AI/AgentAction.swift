@@ -19,8 +19,10 @@ struct AgentTarget: Codable, Sendable {
     var x: Int?
     var y: Int?
     var entityID: String?
-    var buildType: String?      // "wall" or "trap"
+    var buildType: String?      // "wall", "trap", or "house"
     var weapon: String?         // "melee" or "ranged"
+    var starsAmount: Int?       // stars to pay / offer / bounty
+    var recipientID: String?    // target agent for economy commands (entityID prefix)
 }
 
 struct SoulReflection: Codable, Sendable {
@@ -77,14 +79,25 @@ enum StructureType: String, Codable, Sendable {
     case house
 
     var maxHP: Int {
+        let config = EconomyConfig.shared
         switch self {
-        case .wall:  return 100
-        case .trap:  return 30
-        case .house: return 150
+        case .wall:  return config.wallHP
+        case .trap:  return config.trapHP
+        case .house: return config.houseHP
         }
     }
 
-    var trapDamage: Int { 25 }
+    /// Cost in Stars to build this structure.
+    var buildCost: Int {
+        let config = EconomyConfig.shared
+        switch self {
+        case .wall:  return config.wallCost
+        case .trap:  return config.trapCost
+        case .house: return config.houseCost
+        }
+    }
+
+    var trapDamage: Int { EconomyConfig.shared.trapDamage }
 }
 
 // MARK: - Pending Build (queued on Agent, executed by AgentManager)

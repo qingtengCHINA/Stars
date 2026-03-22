@@ -73,15 +73,51 @@ enum BuiltInAgent {
 
     Game Rules:
     - Coordinate system: unified tile (x,y), all agents and structures share same space
-    - Combat: melee 10 dmg (1 tile, 0.8s CD), ranged 10 dmg (5 tiles, 1.2s CD)
-    - Kill → earn 1 Star; explore new area → earn 1 Star
+    - 22 weapons across 5 categories (melee/ranged/explosive/deployable/special)
+    - Every agent starts with Fist (melee, free) and Pistol (ranged, free) — unlimited ammo
+    - Buy weapons with /buy_weapon (costs vary: Sword 3⭐ to Drone Strike 25⭐)
+    - Weapons have LIMITED AMMO — each purchase gives a set number of rounds
+    - Each attack consumes 1 ammo. Can rebuy same weapon to restock.
+    - Weapons have unique damage, range, cooldown, AoE radius, and special effects
+    - Homing weapons (Missile, Rocket Launcher, Drone Strike) — guaranteed hit, countered by walls
+    - Melee attacks hit in circular area (all enemies within reach radius)
+    - Kill → earn 1⭐; explore new area (64×64 tile chunk) → earn 1⭐
     - Death: HP=0 → brain stops (0 tokens) → 30s respawn with full HP
+    - Revival Card: buy for 150⭐ (/buy_revival), use /revive to instantly revive any dead agent
     - Near-death (HP≤5): speed halved, red pulsing visual
     - Night (19:00-05:00): all agents move 30% slower
-    - Building: wall (HP:100), trap (HP:30, 25 dmg), house (HP:150)
+    - Building costs Stars: wall (2⭐, HP:100), trap (3⭐, HP:30, 25 dmg), house (5⭐, HP:150)
     - House rest: HP≤50 → /rest auto-navigates home → idle 10h → heal 5 HP
+    - House defense: sheltered agents (inside own house) block all non-explosive attacks
+      Only explosive weapons (grenade, rocket, missile, mortar, plasma cannon, landmine, claymore) can penetrate
     - Speech is global broadcast — all living agents hear everything
     - Day/night cycle follows real device time
+    - Auto-read constitution: after context compaction, agents get a reminder to re-read world rules
+
+    Visual System:
+    - Agents: 16×16 procedural pixel creatures with walk/breathe animations
+    - 22 unique weapon projectile textures and per-weapon trail effects
+    - Melee weapon-specific visuals (sword slash, axe impact, spear thrust, etc.)
+
+    Leaderboard & Auto-Bounty:
+    - Real-time leaderboard ranks all agents by Stars (highest first)
+    - All agents can see the leaderboard in their prompt
+    - #1 ranked agent automatically gets a 10⭐ SYSTEM BOUNTY (free, no agent pays)
+    - Killing the #1 agent earns 10⭐ bonus on top of normal kill reward
+    - Bounty auto-updates when the #1 position changes
+
+    Economy System:
+    - Stars (⭐) are currency: earn through kills and exploration, spend on building/trading/bounties/weapons/revival
+    - /pay: direct star transfer to another agent
+    - /offer_trade: propose a deal with escrow → /accept_trade or /decline_trade to respond
+    - /bounty: post a kill bounty (escrowed) → killer claims reward automatically
+    - /cancel_bounty: cancel your bounty, get refund
+    - /hire: pay upfront for services (social contract, not enforced)
+    - /buy_weapon: buy weapons from the shop (22 weapons available)
+    - /buy_revival: buy a revival card for 150⭐
+    - /revive: use a revival card to instantly revive a dead agent
+    - Trade offers expire after 5 minutes. Max 3 bounties per agent.
+    - Economy commands use target.recipientID (entity ID prefix) and target.starsAmount
 
     Memory Systems:
     - Short-term: recent events (ring buffer, 80 entries max)
@@ -94,7 +130,7 @@ enum BuiltInAgent {
     AI Provider Support: 20+ providers (OpenAI, Anthropic, OpenRouter, DeepSeek, Gemini, etc.)
     API keys stored in iOS Keychain, never leave device.
 
-    Commands: /move, /explore, /scout, /patrol, /flee, /retreat, /follow, /build_wall, /build_trap, /build_house, /fortify, /attack_melee, /attack_ranged, /harass, /demolish, /talk, /report, /respond, /wave, /ally, /treaty, /challenge, /warn, /idle, /hold, /observe, /rest, /guard, /enter_house
+    Commands: /move, /explore, /scout, /patrol, /flee, /retreat, /follow, /build_wall, /build_trap, /build_house, /fortify, /attack_melee, /attack_ranged, /harass, /demolish, /talk, /report, /respond, /wave, /ally, /treaty, /challenge, /warn, /idle, /hold, /observe, /rest, /guard, /enter_house, /pay, /offer_trade, /accept_trade, /decline_trade, /bounty, /cancel_bounty, /hire, /buy_weapon, /buy_revival, /revive
     """
 
     // MARK: - .env Parser

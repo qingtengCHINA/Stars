@@ -23,8 +23,8 @@ enum APIRequestHeaders {
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         }
 
-        // OpenRouter recommended optional headers
-        if provider == .openrouter {
+        // OpenRouter recommended optional headers (official providers also use OpenRouter backend)
+        if provider == .openrouter || provider.isOfficialProvider {
             request.setValue("https://github.com/nicktmro/Stars", forHTTPHeaderField: "HTTP-Referer")
             request.setValue("Stars", forHTTPHeaderField: "X-Title")
         }

@@ -12,6 +12,10 @@
 
 import Foundation
 
+extension Notification.Name {
+    static let starsConstitutionDidUpdate = Notification.Name("stars.constitutionDidUpdate")
+}
+
 @MainActor
 final class AgentsFile {
     static let shared = AgentsFile()
@@ -37,6 +41,8 @@ final class AgentsFile {
             title: NSLocalizedString("log.agents_updated", comment: ""),
             message: String(format: NSLocalizedString("log.agents_updated_msg", comment: ""), newContent.count)
         )
+        // Notify all agents to re-read the updated constitution
+        NotificationCenter.default.post(name: .starsConstitutionDidUpdate, object: nil)
     }
 
     func reset() {

@@ -13,12 +13,25 @@ final class ProviderPickerViewController: UITableViewController, UISearchResults
 
     private let searchController = UISearchController(searchResultsController: nil)
 
+    /// Build the full provider list: official providers (filtered by tier) + third-party.
+    private var allVisibleProviders: [APIProvider] {
+        let tier = SubscriptionStore.shared.currentTier
+
+        // Official providers: show only those the user's tier can access
+        let official = ProviderCatalog.officialProviders.filter { provider in
+            tier >= provider.requiredSubscriptionTier
+        }
+
+        return official + ProviderCatalog.orderedProviders
+    }
+
     private var filteredProviders: [APIProvider] {
+        let all = allVisibleProviders
         let query = searchController.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !query.isEmpty else { return ProviderCatalog.orderedProviders }
+        guard !query.isEmpty else { return all }
 
         let needle = query.lowercased()
-        return ProviderCatalog.orderedProviders.filter { provider in
+        return all.filter { provider in
             let definition = provider.definition
             let haystack = [
                 definition.displayName,

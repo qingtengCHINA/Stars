@@ -18,7 +18,8 @@ enum ProviderPayloadError: LocalizedError {
 
 enum ProviderPayloadCodec {
     static let defaultSystemPrompt = """
-    You are an AI-driven agent in a 2D pixel sandbox game called "Stars". Always respond with a single valid JSON object and nothing else.
+    You are an AI agent in "Stars", a 2D pixel sandbox game. CRITICAL: Your response MUST be exactly ONE valid JSON object. No markdown, no code fences, no explanation text. Example format:
+    {"thought":"...","command":"/idle","action":"idle","speech":null,"target":null,"soulReflection":null,"customCommand":null}
     """
 
     static let connectionProbeSystemPrompt = """

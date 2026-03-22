@@ -8,6 +8,13 @@ import Foundation
 // MARK: - API Provider
 
 enum APIProvider: String, Codable, CaseIterable {
+    // Official (developer-provided) providers
+    case starsOfficial          // QingTeng (群星官方) — Free tier
+    case starsPlus              // Stars Plus models
+    case starsPro               // Stars Pro models
+    case starsMax               // Stars Max models
+
+    // Third-party providers
     case openai
     case anthropic
     case openrouter
@@ -57,6 +64,38 @@ enum APIProvider: String, Codable, CaseIterable {
 
     var definition: ProviderDefinition {
         ProviderCatalog.definition(for: self)
+    }
+
+    // MARK: - Official Provider Helpers
+
+    /// True for developer-provided official providers (QingTeng / Plus / Pro / Max).
+    var isOfficialProvider: Bool {
+        switch self {
+        case .starsOfficial, .starsPlus, .starsPro, .starsMax: return true
+        default: return false
+        }
+    }
+
+    /// Minimum subscription tier required to use this provider.
+    var requiredSubscriptionTier: SubscriptionTier {
+        switch self {
+        case .starsOfficial: return .free
+        case .starsPlus:     return .plus
+        case .starsPro:      return .pro
+        case .starsMax:      return .max
+        default:             return .free
+        }
+    }
+
+    /// Maximum number of agents allowed for this official provider.
+    var officialAgentLimit: Int {
+        switch self {
+        case .starsOfficial: return 5
+        case .starsPlus:     return 10
+        case .starsPro:      return 5
+        case .starsMax:      return 3
+        default:             return 0
+        }
     }
 }
 

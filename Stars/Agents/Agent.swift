@@ -17,6 +17,14 @@ struct ChatMessageEntry: Codable, Sendable {
     let timestamp: TimeInterval
 }
 
+/// Records every star increase/decrease for the transaction log.
+struct StarTransaction: Codable, Sendable {
+    let timestamp: TimeInterval
+    let amount: Int          // positive = gain, negative = spend
+    let reason: String       // human-readable description
+    let balance: Int         // stars after this transaction
+}
+
 final class Agent: SKSpriteNode {
 
     // MARK: - Identity
@@ -49,8 +57,30 @@ final class Agent: SKSpriteNode {
     var isDead: Bool { hp <= 0 }
     var facingAngle: CGFloat = 0
     var pendingWeapon: WeaponType = .melee
+    var pendingWeaponID: String = "fist"   // specific weapon from catalog
     var weaponCooldown: TimeInterval = 0
     private(set) var stars: Int = 0
+    private(set) var starTransactions: [StarTransaction] = []
+
+    // MARK: - Weapon Inventory & Revival
+
+    /// Weapon ammo inventory — weaponID → remaining uses.
+    /// Free weapons (fist, pistol) are NOT tracked here — always unlimited.
+    var weaponAmmo: [String: Int] = [:]
+
+    /// All weapon IDs the agent currently has ammo for (plus free weapons).
+    var ownedWeapons: Set<String> {
+        var weapons = WeaponCatalog.defaultWeapons  // fist, pistol always available
+        weapons.formUnion(weaponAmmo.keys.filter { weaponAmmo[$0]! > 0 })
+        return weapons
+    }
+
+    /// Number of revival cards held (150⭐ each).
+    var revivalCards: Int = 0
+
+    /// Callback: find nearest living enemy agent near a point (for homing weapons).
+    /// Set by AgentManager. Parameters: (targetPoint, excludeEntityID) → Agent?
+    var nearestAgentProvider: ((CGPoint, String) -> Agent?)?
 
     // MARK: - Building
 
@@ -79,7 +109,7 @@ final class Agent: SKSpriteNode {
 
     // MARK: - Exploration
 
-    /// Tiles this agent has visited (tracked as "chunkX_chunkY" for 8×8 chunks).
+    /// Tiles this agent has visited (tracked as "chunkX_chunkY" for 64×64-tile chunks).
     var visitedChunks: Set<String> = []
 
     // MARK: - Movement
@@ -106,9 +136,15 @@ final class Agent: SKSpriteNode {
     private var _wasResting = false
     private var _wasNearDeath = false
 
+    // MARK: - Animation
+
+    private var walkTextures: [SKTexture]?
+    private var idleTexture: SKTexture?
+    private var isAnimatingWalk = false
+
     // MARK: - Constants
 
-    static let agentSize: CGFloat = 14
+    static let agentSize: CGFloat = 24
 
     // MARK: - Init
 
@@ -125,16 +161,21 @@ final class Agent: SKSpriteNode {
         self.hp = max(0, min(startingHP, maxHP))
         self.agentColor = agentColor
 
-        let texture = Self.createCreatureTexture(seed: entityID, baseColor: agentColor)
+        let textures = Self.createCreatureTextures(seed: entityID, baseColor: agentColor)
         let size = CGSize(width: Self.agentSize, height: Self.agentSize)
 
-        super.init(texture: texture, color: .clear, size: size)
+        super.init(texture: textures[0], color: .clear, size: size)
+        self.idleTexture = textures[0]
+        if textures.count > 1 {
+            self.walkTextures = Array(textures.dropFirst())
+        }
         self.zPosition = ZSort.entityBase   // will be refined per-frame
         self.name = displayName
         wanderTimer = TimeInterval.random(in: 0.5...2.0)
 
         setupPhysicsBody()
         setupHPBar()
+        startIdleAnimation()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -160,13 +201,13 @@ final class Agent: SKSpriteNode {
     // MARK: - HP Bar
 
     private func setupHPBar() {
-        let barW: CGFloat = 12
+        let barW: CGFloat = 20
         let barH: CGFloat = 2
 
         let bg = SKSpriteNode(color: UIColor(white: 0.2, alpha: 0.8),
                               size: CGSize(width: barW, height: barH))
         bg.anchorPoint = CGPoint(x: 0, y: 0.5)
-        bg.position = CGPoint(x: -barW / 2, y: Self.agentSize / 2 + 2)
+        bg.position = CGPoint(x: -barW / 2, y: Self.agentSize / 2 + 3)
         bg.zPosition = 2
         addChild(bg)
         hpBarBg = bg
@@ -201,7 +242,7 @@ final class Agent: SKSpriteNode {
             if restingNode == nil {
                 let zzz = SKLabelNode(text: "💤")
                 zzz.fontSize = 8
-                zzz.position = CGPoint(x: 0, y: Self.agentSize / 2 + 14)
+                zzz.position = CGPoint(x: 0, y: Self.agentSize / 2 + 16)
                 zzz.zPosition = 4
                 zzz.name = "restingIndicator"
                 addChild(zzz)
@@ -246,6 +287,34 @@ final class Agent: SKSpriteNode {
         }
     }
 
+    // MARK: - Walk / Idle Animation
+
+    private func startIdleAnimation() {
+        removeAction(forKey: "walkAnim")
+        let breatheIn = SKAction.scaleY(to: 1.04, duration: 0.7)
+        breatheIn.timingMode = .easeInEaseOut
+        let breatheOut = SKAction.scaleY(to: 0.96, duration: 0.7)
+        breatheOut.timingMode = .easeInEaseOut
+        let breathe = SKAction.repeatForever(SKAction.sequence([breatheIn, breatheOut]))
+        run(breathe, withKey: "idleBreathe")
+    }
+
+    private func startWalkAnimation() {
+        removeAction(forKey: "idleBreathe")
+        yScale = 1.0
+        guard let frames = walkTextures, !frames.isEmpty else { return }
+        let walkAction = SKAction.animate(with: frames, timePerFrame: 0.12)
+        run(SKAction.repeatForever(walkAction), withKey: "walkAnim")
+    }
+
+    private func stopWalkAnimation() {
+        removeAction(forKey: "walkAnim")
+        self.texture = idleTexture
+        if !isDead {
+            startIdleAnimation()
+        }
+    }
+
     // MARK: - Exploration Tracking
 
     /// Cached chunk coordinate to avoid per-frame String allocation.
@@ -255,8 +324,8 @@ final class Agent: SKSpriteNode {
 
     /// Check and record chunk visit. Returns true if this is a newly discovered chunk.
     func trackExploration() -> Bool {
-        let chunkX = Int(floor(position.x / (Chunk.tileSize * 8)))
-        let chunkY = Int(floor(position.y / (Chunk.tileSize * 8)))
+        let chunkX = Int(floor(position.x / (Chunk.tileSize * 64)))
+        let chunkY = Int(floor(position.y / (Chunk.tileSize * 64)))
         // Fast path: still in the same chunk as last frame
         guard chunkX != lastChunkX || chunkY != lastChunkY else { return false }
         lastChunkX = chunkX
@@ -300,7 +369,7 @@ final class Agent: SKSpriteNode {
         label.fontSize = 8
         label.fontName = PixelTheme.skFontName
         label.fontColor = .white
-        label.position = CGPoint(x: 0, y: Self.agentSize / 2 + 8)
+        label.position = CGPoint(x: 0, y: Self.agentSize / 2 + 10)
         label.numberOfLines = 2
         label.preferredMaxLayoutWidth = 100
         label.horizontalAlignmentMode = .center
@@ -312,10 +381,78 @@ final class Agent: SKSpriteNode {
         speechTimer = 5.0
     }
 
-    func awardStar() {
-        stars += 1
-        memory.record(type: .combat, content: "Earned a Star! Total Stars: \(stars).")
-        showSpeechBubble("⭐ Star!")
+    // MARK: - Star Transaction Recording
+
+    /// Records a star transaction and keeps the log capped at 100 entries.
+    private func recordStarTransaction(amount: Int, reason: String) {
+        let tx = StarTransaction(
+            timestamp: Date().timeIntervalSince1970,
+            amount: amount,
+            reason: reason,
+            balance: stars
+        )
+        starTransactions.append(tx)
+        // Keep only the most recent 100 transactions
+        if starTransactions.count > 100 {
+            starTransactions.removeFirst(starTransactions.count - 100)
+        }
+    }
+
+    /// Award kill reward: percentage of the victim's stars (minimum killReward).
+    func awardKillReward(victimStars: Int) {
+        let pct = EconomyConfig.shared.killRewardPercent
+        let reward = max(EconomyConfig.shared.killReward, victimStars * pct / 100)
+        stars += reward
+        recordStarTransaction(amount: reward, reason: "Kill reward (victim had \(victimStars)⭐)")
+        memory.record(type: .combat, content: "Earned \(reward)⭐ from kill (victim had \(victimStars)⭐)! Total Stars: \(stars).")
+        showSpeechBubble("⭐ +\(reward)")
+    }
+
+    // MARK: - Economy
+
+    /// Attempt to spend stars. Returns true if the agent has enough.
+    @discardableResult
+    func spendStars(_ amount: Int, reason: String = "purchase") -> Bool {
+        guard amount > 0, stars >= amount else { return false }
+        stars -= amount
+        recordStarTransaction(amount: -amount, reason: reason)
+        memory.record(type: .observe, content: "Spent \(amount) ⭐ (remaining: \(stars)).")
+        return true
+    }
+
+    /// Receive stars from another agent (or system).
+    func receiveStars(_ amount: Int, from senderName: String? = nil) {
+        guard amount > 0 else { return }
+        stars += amount
+        let source = senderName ?? "system"
+        recordStarTransaction(amount: amount, reason: "Received from \(source)")
+        memory.record(type: .observe, content: "Received \(amount) ⭐ from \(source). Total: \(stars).")
+        showSpeechBubble("⭐ +\(amount)")
+    }
+
+    // MARK: - Ammo
+
+    /// Consume 1 ammo for the given weapon. Returns false if out of ammo.
+    func consumeAmmo(weaponID: String) -> Bool {
+        // Free weapons have unlimited ammo
+        guard !WeaponCatalog.defaultWeapons.contains(weaponID) else { return true }
+        guard let current = weaponAmmo[weaponID], current > 0 else { return false }
+        weaponAmmo[weaponID] = current - 1
+        if current - 1 == 0 {
+            weaponAmmo.removeValue(forKey: weaponID)
+        }
+        return true
+    }
+
+    /// Add ammo for a weapon (from purchase).
+    func addAmmo(weaponID: String, amount: Int) {
+        weaponAmmo[weaponID] = (weaponAmmo[weaponID] ?? 0) + amount
+    }
+
+    /// Check remaining ammo for a weapon (0 for not owned, -1 for unlimited free weapons).
+    func ammoCount(for weaponID: String) -> Int {
+        if WeaponCatalog.defaultWeapons.contains(weaponID) { return -1 }
+        return weaponAmmo[weaponID] ?? 0
     }
 
     func healHP(_ amount: Int) {
@@ -404,6 +541,11 @@ final class Agent: SKSpriteNode {
     }
 
     private func die() {
+        // Stop all animations on death
+        removeAction(forKey: "idleBreathe")
+        removeAction(forKey: "walkAnim")
+        isAnimatingWalk = false
+        yScale = 1.0
         physicsBody?.velocity = .zero
         physicsBody?.categoryBitMask = PhysicsCategory.none
         physicsBody?.contactTestBitMask = PhysicsCategory.none
@@ -412,7 +554,7 @@ final class Agent: SKSpriteNode {
         targetPosition = nil
         currentAction = .idle
         pendingBuild = nil
-        respawnTimer = 30.0   // 30 seconds — death is meaningful
+        respawnTimer = EconomyConfig.shared.respawnTime
 
         // STOP the brain — no more token consumption during death
         brain?.stop()
@@ -434,11 +576,22 @@ final class Agent: SKSpriteNode {
         )
     }
 
+    /// Force respawn — called by Revival Card. Skips the 30s timer.
+    func forceRespawn() {
+        guard isDead else { return }
+        respawnTimer = 0
+        respawn()
+        memory.record(type: .combat, content: "Revived by a Revival Card! Full HP restored.")
+    }
+
     private func respawn() {
         hp = maxHP
         restorePhysicsBody()
         alpha = 1.0
         updateHPBar()
+        // Restart animations after revival
+        self.texture = idleTexture
+        startIdleAnimation()
 
         // RESTART the brain — thinking resumes
         brain?.resume()
@@ -473,7 +626,9 @@ final class Agent: SKSpriteNode {
         respawnRemaining: TimeInterval,
         stars: Int = 0,
         houseRestAccumulator: TimeInterval = 0,
-        visitedChunks: Set<String> = []
+        visitedChunks: Set<String> = [],
+        weaponAmmo: [String: Int] = [:],
+        revivalCards: Int = 0
     ) {
         self.position = position
         self.hp = max(0, min(hp, maxHP))
@@ -488,6 +643,8 @@ final class Agent: SKSpriteNode {
         self.stars = stars
         self.houseRestAccumulator = houseRestAccumulator
         self.visitedChunks = visitedChunks
+        self.weaponAmmo = weaponAmmo
+        self.revivalCards = revivalCards
 
         if isDead {
             applyDeadStateForRestore()
@@ -535,6 +692,18 @@ final class Agent: SKSpriteNode {
         // Update depth sorting based on y-position
         zPosition = ZSort.depthZ(for: position.y)
 
+        // Walk animation: toggle based on movement
+        let vel = physicsBody?.velocity ?? .zero
+        let isMoving = (vel.dx * vel.dx + vel.dy * vel.dy) > 4
+        if isMoving != isAnimatingWalk {
+            isAnimatingWalk = isMoving
+            if isMoving {
+                startWalkAnimation()
+            } else {
+                stopWalkAnimation()
+            }
+        }
+
         // Resting-in-house visual — only update when state changes
         let resting = isRestingInHouse
         if resting != _wasResting {
@@ -549,11 +718,13 @@ final class Agent: SKSpriteNode {
             updateNearDeathVisual()
         }
 
-        // Exploration tracking — award star for discovering new chunks
+        // Exploration tracking — award stars for discovering new chunks
         if !isDead && trackExploration() {
-            stars += 1
-            memory.record(type: .observe, content: "Discovered a new area! Earned an exploration Star. Total Stars: \(stars).")
-            showSpeechBubble("🌟 New area!")
+            let reward = EconomyConfig.shared.explorationReward
+            stars += reward
+            recordStarTransaction(amount: reward, reason: "Exploration reward")
+            memory.record(type: .observe, content: "Discovered a new area! Earned \(reward) exploration Star\(reward > 1 ? "s" : ""). Total Stars: \(stars).")
+            showSpeechBubble("🌟 +\(reward)")
         }
 
         // Dead → count down respawn
@@ -584,7 +755,8 @@ final class Agent: SKSpriteNode {
         // Attack: if in range and cooled down → fire weapon
         if currentAction == .attack, let target = targetPosition {
             let dist = hypot(target.x - position.x, target.y - position.y)
-            if dist <= pendingWeapon.range && weaponCooldown <= 0 {
+            let weaponDef = WeaponCatalog.weapon(for: pendingWeaponID)
+            if dist <= weaponDef.reach && weaponCooldown <= 0 {
                 performAttack(toward: target)
                 return
             }
@@ -602,13 +774,33 @@ final class Agent: SKSpriteNode {
 
     private func performAttack(toward target: CGPoint) {
         guard let parent = self.parent else { return }
-        weaponCooldown = pendingWeapon.cooldown
+        let weaponDef = WeaponCatalog.weapon(for: pendingWeaponID)
 
-        switch pendingWeapon {
+        // Consume ammo — free weapons are unlimited
+        guard consumeAmmo(weaponID: pendingWeaponID) else {
+            memory.record(type: .combat, content: "Out of ammo for \(weaponDef.displayName)! Buy more with /buy_weapon.")
+            showSpeechBubble("🔫 No ammo!")
+            clearTarget()
+            currentAction = .idle
+            return
+        }
+
+        weaponCooldown = weaponDef.cooldown
+
+        // Play weapon SFX
+        SoundManager.shared.playWeaponSFX(weaponID: pendingWeaponID)
+
+        switch weaponDef.category {
         case .melee:
-            WeaponSystem.meleeAttack(by: self, in: parent)
-        case .ranged:
-            WeaponSystem.rangedAttack(by: self, toward: target, in: parent)
+            WeaponSystem.meleeAttack(by: self, weaponDef: weaponDef, in: parent)
+        case .ranged, .explosive:
+            // For homing weapons, find the nearest enemy to target
+            var homingTarget: Agent? = nil
+            if weaponDef.isHoming {
+                homingTarget = nearestAgentProvider?(target, entityID)
+            }
+            WeaponSystem.rangedAttack(by: self, toward: target, weaponDef: weaponDef,
+                                      in: parent, homingTarget: homingTarget)
         }
 
         clearTarget()
@@ -663,36 +855,40 @@ final class Agent: SKSpriteNode {
         }
     }
 
-    // MARK: - Procedural Pixel Creature
+    // MARK: - Procedural Pixel Creature (Clawd-style, 16×16)
 
-    private static var textureCache: [String: SKTexture] = [:]
+    private static var textureFrameCache: [String: [SKTexture]] = [:]
 
-    /// Generates a unique symmetric pixel-art creature using a seeded RNG.
-    /// Each entity ID produces a distinct, repeatable creature silhouette.
-    /// Results are cached so restoring agents doesn't re-render textures.
-    private static func createCreatureTexture(seed: String, baseColor: UIColor) -> SKTexture {
-        if let cached = textureCache[seed] { return cached }
-        let w = 12
-        let h = 12
-        let halfW = w / 2
+    /// Generates a unique symmetric pixel-art creature with walk animation frames.
+    /// Returns [idle, walkLeft, walkRight] — 3 frames for walk cycle.
+    /// 16×16 canvas with big head, stubby body, distinct legs (Clawd-inspired).
+    private static func createCreatureTextures(seed: String, baseColor: UIColor) -> [SKTexture] {
+        if let cached = textureFrameCache[seed] { return cached }
+        let w = 16
+        let h = 16
+        let halfW = w / 2 // 8
         var rng = PixelRNG(seed: djb2Hash(seed))
 
-        // --- 1. Generate body mask (left half only) ---
-        // Zone probabilities by row: head (narrow) → body (wide) → legs (narrow, split)
+        // --- 1. Generate body mask (left half only, mirrored) ---
+        // Big-headed Clawd-style proportions: large head, compact body, stubby legs
         let zoneProb: [[Double]] = [
-            //  col: 0     1     2     3     4     5
-            /* row 0  */ [0.00, 0.00, 0.15, 0.30, 0.20, 0.05],  // top of head
-            /* row 1  */ [0.00, 0.10, 0.50, 0.75, 0.55, 0.15],  // head
-            /* row 2  */ [0.05, 0.30, 0.70, 0.90, 0.80, 0.30],  // head/neck
-            /* row 3  */ [0.10, 0.55, 0.85, 0.95, 0.90, 0.50],  // shoulders
-            /* row 4  */ [0.15, 0.60, 0.90, 0.95, 0.95, 0.55],  // body
-            /* row 5  */ [0.15, 0.60, 0.90, 0.95, 0.95, 0.55],  // body
-            /* row 6  */ [0.10, 0.55, 0.85, 0.95, 0.90, 0.50],  // body
-            /* row 7  */ [0.10, 0.50, 0.80, 0.90, 0.85, 0.45],  // waist
-            /* row 8  */ [0.05, 0.35, 0.65, 0.80, 0.70, 0.30],  // hips
-            /* row 9  */ [0.00, 0.20, 0.50, 0.40, 0.55, 0.15],  // upper legs
-            /* row 10 */ [0.00, 0.10, 0.40, 0.20, 0.45, 0.10],  // lower legs
-            /* row 11 */ [0.00, 0.05, 0.35, 0.15, 0.40, 0.08],  // feet
+            //  col: 0     1     2     3     4     5     6     7
+            /* 0  */ [0.00, 0.00, 0.00, 0.05, 0.20, 0.25, 0.10, 0.00],  // top accent
+            /* 1  */ [0.00, 0.00, 0.15, 0.50, 0.75, 0.82, 0.55, 0.12],  // head top
+            /* 2  */ [0.00, 0.05, 0.35, 0.78, 0.92, 0.95, 0.82, 0.28],  // head
+            /* 3  */ [0.00, 0.10, 0.52, 0.88, 0.96, 0.98, 0.90, 0.38],  // head widest
+            /* 4  */ [0.00, 0.10, 0.52, 0.88, 0.96, 0.98, 0.90, 0.38],  // eyes row
+            /* 5  */ [0.00, 0.08, 0.45, 0.82, 0.94, 0.96, 0.85, 0.32],  // lower face
+            /* 6  */ [0.00, 0.05, 0.30, 0.68, 0.85, 0.90, 0.75, 0.22],  // chin
+            /* 7  */ [0.00, 0.00, 0.15, 0.45, 0.68, 0.75, 0.58, 0.12],  // neck
+            /* 8  */ [0.00, 0.10, 0.38, 0.65, 0.88, 0.92, 0.85, 0.38],  // shoulders
+            /* 9  */ [0.05, 0.22, 0.52, 0.75, 0.92, 0.96, 0.92, 0.48],  // body + arms
+            /* 10 */ [0.05, 0.20, 0.50, 0.72, 0.92, 0.96, 0.90, 0.45],  // body
+            /* 11 */ [0.00, 0.12, 0.38, 0.58, 0.82, 0.88, 0.78, 0.32],  // waist
+            /* 12 */ [0.00, 0.00, 0.20, 0.42, 0.62, 0.55, 0.50, 0.18],  // hips
+            /* 13 */ [0.00, 0.00, 0.12, 0.35, 0.55, 0.28, 0.48, 0.12],  // upper legs (gap)
+            /* 14 */ [0.00, 0.00, 0.08, 0.28, 0.48, 0.20, 0.42, 0.08],  // lower legs
+            /* 15 */ [0.00, 0.00, 0.00, 0.22, 0.42, 0.15, 0.35, 0.00],  // feet
         ]
 
         var half = [[Bool]](repeating: [Bool](repeating: false, count: halfW), count: h)
@@ -712,99 +908,140 @@ final class Agent: SKSpriteNode {
             }
         }
 
-        // Ensure minimum body mass (fill core if too sparse)
+        // Ensure minimum body mass
         let mass = body.flatMap { $0 }.filter { $0 }.count
-        if mass < 24 {
-            for row in 2...8 {
-                for col in 3...8 { body[row][col] = true }
+        if mass < 36 {
+            for row in 2...10 {
+                for col in 4...11 { body[row][col] = true }
             }
         }
 
-        // --- 2. Color palette from base color ---
+        // --- 2. Color palette ---
         var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
         baseColor.getRed(&br, green: &bg, blue: &bb, alpha: &ba)
-
         let bodyC    = baseColor
         let lightC   = UIColor(red: min(1, br + 0.18), green: min(1, bg + 0.18), blue: min(1, bb + 0.18), alpha: 1)
         let darkC    = UIColor(red: max(0, br - 0.18), green: max(0, bg - 0.18), blue: max(0, bb - 0.18), alpha: 1)
         let outlineC = UIColor(red: max(0, br - 0.40), green: max(0, bg - 0.40), blue: max(0, bb - 0.40), alpha: 1)
 
-        // --- 3. Determine eye placement ---
-        // Find the topmost row with filled pixels in the center columns (3-8), then place eyes 1-2 rows below
-        var eyeRow = 3
-        for testRow in 1..<(h - 3) {
-            let centerFilled = (3...8).contains { body[testRow][$0] }
+        // --- 3. Eye placement ---
+        var eyeRow = 4
+        for testRow in 1..<(h - 4) {
+            let centerFilled = (5...10).contains { body[testRow][$0] }
             if centerFilled {
-                eyeRow = min(testRow + 1, h - 3)
+                eyeRow = min(testRow + 1, h - 4)
                 break
             }
         }
-        // Eye columns: symmetrical, at roughly 1/3 and 2/3 of the body width
-        let leftEyeCol = 4
-        let rightEyeCol = w - 1 - leftEyeCol
+        let leftEyeCol = 5
+        let rightEyeCol = w - 1 - leftEyeCol  // 10
 
-        // --- 4. Render ---
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1.0
-        let renderer = UIGraphicsImageRenderer(
-            size: CGSize(width: w, height: h),
-            format: format
-        )
+        // --- 4. Pre-compute pixel color map (consistent across frames) ---
+        var colorMap = [[UIColor?]](repeating: [UIColor?](repeating: nil, count: w), count: h)
+        for row in 0..<h {
+            for col in 0..<w {
+                guard body[row][col] else { continue }
+                let v = Int(rng.next() % 100)
+                if v < 18      { colorMap[row][col] = lightC }
+                else if v < 32 { colorMap[row][col] = darkC }
+                else           { colorMap[row][col] = bodyC }
+            }
+        }
 
-        let image = renderer.image { ctx in
-            let gc = ctx.cgContext
+        // --- 5. Render function ---
+        func renderFrame(mask: [[Bool]]) -> SKTexture {
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1.0
+            let renderer = UIGraphicsImageRenderer(
+                size: CGSize(width: w, height: h), format: format
+            )
+            let image = renderer.image { ctx in
+                let gc = ctx.cgContext
+                gc.clear(CGRect(x: 0, y: 0, width: w, height: h))
 
-            // Transparent background
-            gc.clear(CGRect(x: 0, y: 0, width: w, height: h))
-
-            // Outline layer: draw 1px dark border around all body pixels
-            gc.setFillColor(outlineC.cgColor)
-            for row in 0..<h {
-                for col in 0..<w {
-                    guard !body[row][col] else { continue }
-                    let adj = [(row-1, col), (row+1, col), (row, col-1), (row, col+1)]
-                    let touchesBody = adj.contains { r, c in
-                        r >= 0 && r < h && c >= 0 && c < w && body[r][c]
+                // Outline (1px dark border around body pixels)
+                gc.setFillColor(outlineC.cgColor)
+                for row in 0..<h {
+                    for col in 0..<w {
+                        guard !mask[row][col] else { continue }
+                        let adj = [(row-1, col), (row+1, col), (row, col-1), (row, col+1)]
+                        let touchesBody = adj.contains { r, c in
+                            r >= 0 && r < h && c >= 0 && c < w && mask[r][c]
+                        }
+                        if touchesBody {
+                            gc.fill(CGRect(x: col, y: row, width: 1, height: 1))
+                        }
                     }
-                    if touchesBody {
+                }
+
+                // Body pixels — use pre-computed colors for base body,
+                // fall back to bodyC for walk-shifted pixels
+                for row in 0..<h {
+                    for col in 0..<w {
+                        guard mask[row][col] else { continue }
+                        let color = colorMap[row][col] ?? bodyC
+                        gc.setFillColor(color.cgColor)
                         gc.fill(CGRect(x: col, y: row, width: 1, height: 1))
                     }
                 }
-            }
 
-            // Body pixels with random color variation for texture
-            for row in 0..<h {
-                for col in 0..<w {
-                    guard body[row][col] else { continue }
-                    let v = Int(rng.next() % 100)
-                    let color: UIColor
-                    if v < 18 {
-                        color = lightC
-                    } else if v < 32 {
-                        color = darkC
-                    } else {
-                        color = bodyC
-                    }
-                    gc.setFillColor(color.cgColor)
-                    gc.fill(CGRect(x: col, y: row, width: 1, height: 1))
+                // Eyes: 2×2 white + 1×1 dark pupil
+                if mask[eyeRow][leftEyeCol] && mask[eyeRow][rightEyeCol] {
+                    gc.setFillColor(UIColor.white.cgColor)
+                    gc.fill(CGRect(x: leftEyeCol, y: eyeRow, width: 2, height: 2))
+                    gc.fill(CGRect(x: rightEyeCol - 1, y: eyeRow, width: 2, height: 2))
+                    gc.setFillColor(UIColor(white: 0.08, alpha: 1).cgColor)
+                    gc.fill(CGRect(x: leftEyeCol + 1, y: eyeRow + 1, width: 1, height: 1))
+                    gc.fill(CGRect(x: rightEyeCol - 1, y: eyeRow + 1, width: 1, height: 1))
                 }
             }
-
-            // Eyes: 2x2 white square with 1x1 pupil
-            gc.setFillColor(UIColor.white.cgColor)
-            gc.fill(CGRect(x: leftEyeCol, y: eyeRow, width: 2, height: 2))
-            gc.fill(CGRect(x: rightEyeCol - 1, y: eyeRow, width: 2, height: 2))
-
-            // Pupils (bottom-inner corner of each eye)
-            gc.setFillColor(UIColor(white: 0.08, alpha: 1).cgColor)
-            gc.fill(CGRect(x: leftEyeCol + 1, y: eyeRow + 1, width: 1, height: 1))
-            gc.fill(CGRect(x: rightEyeCol - 1, y: eyeRow + 1, width: 1, height: 1))
+            let tex = SKTexture(image: image)
+            tex.filteringMode = .nearest
+            return tex
         }
 
-        let texture = SKTexture(image: image)
-        texture.filteringMode = .nearest
-        textureCache[seed] = texture
-        return texture
+        // --- 6. Idle frame ---
+        let idleFrame = renderFrame(mask: body)
+
+        // --- 7. Walk frames: shift leg-zone pixels ---
+        let legStart = 12
+
+        // Walk-left: left legs shift down 1px, right legs shift up 1px
+        var walkL = body
+        for row in stride(from: h - 1, to: legStart, by: -1) {
+            for col in 0..<halfW {
+                walkL[row][col] = body[row - 1][col]
+            }
+        }
+        for col in 0..<halfW { walkL[legStart][col] = false }
+        for row in legStart..<(h - 1) {
+            for col in halfW..<w {
+                walkL[row][col] = body[row + 1][col]
+            }
+        }
+        for col in halfW..<w { walkL[h - 1][col] = false }
+
+        // Walk-right: right legs shift down 1px, left legs shift up 1px
+        var walkR = body
+        for row in stride(from: h - 1, to: legStart, by: -1) {
+            for col in halfW..<w {
+                walkR[row][col] = body[row - 1][col]
+            }
+        }
+        for col in halfW..<w { walkR[legStart][col] = false }
+        for row in legStart..<(h - 1) {
+            for col in 0..<halfW {
+                walkR[row][col] = body[row + 1][col]
+            }
+        }
+        for col in 0..<halfW { walkR[h - 1][col] = false }
+
+        let walkLFrame = renderFrame(mask: walkL)
+        let walkRFrame = renderFrame(mask: walkR)
+
+        let frames = [idleFrame, walkLFrame, walkRFrame]
+        textureFrameCache[seed] = frames
+        return frames
     }
 
     // Simple deterministic RNG for creature generation
@@ -845,7 +1082,7 @@ final class Agent: SKSpriteNode {
         targetPosition = nil
         currentAction = .idle
         if respawnTimer <= 0 {
-            respawnTimer = 30.0
+            respawnTimer = EconomyConfig.shared.respawnTime
         }
         // Stop brain for restored dead agents too
         brain?.stop()

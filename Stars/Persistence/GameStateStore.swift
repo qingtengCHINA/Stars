@@ -63,6 +63,8 @@ struct AgentSnapshot: Codable, Sendable {
     let stars: Int
     let houseRestAccumulator: Double
     let visitedChunks: [String]
+    let weaponAmmo: [String: Int]
+    let revivalCards: Int
 
     init(
         entityID: String,
@@ -83,7 +85,9 @@ struct AgentSnapshot: Codable, Sendable {
         respawnRemaining: Double,
         stars: Int = 0,
         houseRestAccumulator: Double = 0,
-        visitedChunks: [String] = []
+        visitedChunks: [String] = [],
+        weaponAmmo: [String: Int] = [:],
+        revivalCards: Int = 0
     ) {
         self.entityID = entityID
         self.modelConfigID = modelConfigID
@@ -104,6 +108,17 @@ struct AgentSnapshot: Codable, Sendable {
         self.stars = stars
         self.houseRestAccumulator = houseRestAccumulator
         self.visitedChunks = visitedChunks
+        self.weaponAmmo = weaponAmmo
+        self.revivalCards = revivalCards
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case entityID, modelConfigID, displayName, positionX, positionY
+        case hp, moveSpeed, color, currentThought, currentAction
+        case memories, chatMessages, shortTermMessages, forceNextThink
+        case pendingOwnerReplies, respawnRemaining, stars, houseRestAccumulator
+        case visitedChunks, weaponAmmo, revivalCards
+        case ownedWeapons // legacy key for backward compatibility
     }
 
     init(from decoder: Decoder) throws {
@@ -127,6 +142,46 @@ struct AgentSnapshot: Codable, Sendable {
         stars = try container.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         houseRestAccumulator = try container.decodeIfPresent(Double.self, forKey: .houseRestAccumulator) ?? 0
         visitedChunks = try container.decodeIfPresent([String].self, forKey: .visitedChunks) ?? []
+        // Backward-compatible: try new weaponAmmo first, fall back to old ownedWeapons
+        if let ammo = try container.decodeIfPresent([String: Int].self, forKey: .weaponAmmo) {
+            weaponAmmo = ammo
+        } else if let oldWeapons = try container.decodeIfPresent([String].self, forKey: .ownedWeapons) {
+            // Migrate: convert old Set<String> to ammo dict (give ammoPerPurchase for each)
+            var migrated = [String: Int]()
+            for id in oldWeapons where !WeaponCatalog.defaultWeapons.contains(id) {
+                migrated[id] = WeaponCatalog.weapon(for: id).ammoPerPurchase
+            }
+            weaponAmmo = migrated
+        } else {
+            weaponAmmo = [:]
+        }
+        revivalCards = try container.decodeIfPresent(Int.self, forKey: .revivalCards) ?? 0
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(entityID, forKey: .entityID)
+        try container.encode(modelConfigID, forKey: .modelConfigID)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(positionX, forKey: .positionX)
+        try container.encode(positionY, forKey: .positionY)
+        try container.encode(hp, forKey: .hp)
+        try container.encode(moveSpeed, forKey: .moveSpeed)
+        try container.encode(color, forKey: .color)
+        try container.encodeIfPresent(currentThought, forKey: .currentThought)
+        try container.encode(currentAction, forKey: .currentAction)
+        try container.encode(memories, forKey: .memories)
+        try container.encode(chatMessages, forKey: .chatMessages)
+        try container.encode(shortTermMessages, forKey: .shortTermMessages)
+        try container.encode(forceNextThink, forKey: .forceNextThink)
+        try container.encode(pendingOwnerReplies, forKey: .pendingOwnerReplies)
+        try container.encode(respawnRemaining, forKey: .respawnRemaining)
+        try container.encode(stars, forKey: .stars)
+        try container.encode(houseRestAccumulator, forKey: .houseRestAccumulator)
+        try container.encode(visitedChunks, forKey: .visitedChunks)
+        try container.encode(weaponAmmo, forKey: .weaponAmmo)
+        try container.encode(revivalCards, forKey: .revivalCards)
+        // Note: ownedWeapons (legacy key) is intentionally NOT encoded
     }
 
     init(agent: Agent) {
@@ -149,7 +204,9 @@ struct AgentSnapshot: Codable, Sendable {
             respawnRemaining: agent.respawnRemaining,
             stars: agent.stars,
             houseRestAccumulator: agent.houseRestAccumulator,
-            visitedChunks: Array(agent.visitedChunks)
+            visitedChunks: Array(agent.visitedChunks),
+            weaponAmmo: agent.weaponAmmo,
+            revivalCards: agent.revivalCards
         )
     }
 }

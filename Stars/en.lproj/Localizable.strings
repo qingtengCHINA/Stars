@@ -10,6 +10,8 @@
 "settings.header" = "─── Stars Control Panel ───";
 "settings.agent_management" = "Agent Management";
 "settings.constitution" = "World Constitution";
+"settings.commands" = "System Commands";
+"settings.economy" = "Economy System";
 "settings.about" = "About Stars";
 
 // MARK: - Model Settings (Agent Management)
@@ -27,7 +29,7 @@
 "edit.back" = "← Back";
 "edit.docs" = "📖 Docs";
 "edit.section_alias" = "Label";
-"edit.placeholder_alias" = "AI Provider Name";
+"edit.placeholder_alias" = "Name your Agent";
 "edit.section_apikey" = "API Key";
 "edit.apikey_hint" = "Your key is securely stored in the iOS Keychain and never leaves the device.";
 "edit.section_baseurl" = "Custom API URL (Optional)";
@@ -74,6 +76,28 @@
 "constitution.cancel" = "Cancel";
 "constitution.reset_confirm" = "Reset";
 
+// MARK: - Commands Editor
+
+"commands_editor.title" = "System Commands";
+"commands_editor.save" = "💾 Save";
+"commands_editor.reset" = "🔄 Reset";
+"commands_editor.hint" = "Edit the commands agents can use. Changes take effect on next think cycle.";
+"commands_editor.reset_alert_title" = "⚠️ Reset Commands";
+"commands_editor.reset_alert_message" = "Restore to default system commands?\nYour custom changes will be lost.";
+"commands_editor.cancel" = "Cancel";
+"commands_editor.reset_confirm" = "Reset";
+
+// MARK: - Economy Editor
+
+"economy_editor.title" = "Economy System";
+"economy_editor.save" = "💾 Save";
+"economy_editor.reset" = "🔄 Reset";
+"economy_editor.hint" = "Edit economy rules and [CONFIG] values. CONFIG changes apply to real game mechanics immediately.";
+"economy_editor.reset_alert_title" = "⚠️ Reset Economy";
+"economy_editor.reset_alert_message" = "Restore to default economy rules?\nYour custom changes will be lost.";
+"economy_editor.cancel" = "Cancel";
+"economy_editor.reset_confirm" = "Reset";
+
 // MARK: - About
 
 "about.title" = "About Stars";
@@ -113,6 +137,7 @@
 "chat.agent_missing" = "Agent Not Found";
 "chat.owner" = "Owner";
 "chat.thinking" = "%@ is thinking...";
+"chat.agent_paused" = "⚠️ This agent is paused: requires %@ or higher subscription tier. Please subscribe in Settings.";
 "chat.thought" = "💭 Current thought: %@";
 "chat.short_memory" = "── Short-term Memory (%d entries) ──";
 "chat.long_memory" = "── Long-term Memory: %d entries ──";
@@ -192,9 +217,121 @@
 "log.near_death" = "Near Death";
 "log.near_death_msg" = "%@ is critically wounded (HP: %d). Speed halved.";
 
+// MARK: - Sound Settings
+
+"settings.sound" = "Sound Settings";
+"sound.title" = "Sound Settings";
+"sound.bgm_title" = "🎵 Background Music";
+"sound.bgm_volume" = "Volume: %d%%";
+"sound.sfx_title" = "🔫 Sound Effects";
+"sound.sfx_volume" = "Volume: %d%%";
+"sound.tracklist" = "🎶 Track List";
+"sound.credit" = "Music from www.fiftysounds.com";
+"sound.apple_music_title" = "Apple Music";
+"sound.apple_music_auth" = "Authorize Apple Music";
+"sound.apple_music_denied" = "Apple Music Not Authorized";
+"sound.apple_music_play" = "Play Playlist";
+"sound.apple_music_stop" = "Stop Playing";
+"sound.apple_music_empty" = "No Music Found";
+"sound.apple_music_selected" = "%d Selected";
+"sound.bgm_source" = "BGM Source";
+"sound.bgm_builtin" = "Built-in Tracks";
+"sound.bgm_apple_music" = "Apple Music";
+
+// MARK: - About Music
+
+"about.music_title" = "🎵 Music Credits";
+"about.music_from" = "Music from www.fiftysounds.com";
+
+// MARK: - Chat Tabs
+
+"chat.tab_log" = "Log";
+"chat.tab_stars" = "⭐ Stars";
+"chat.no_transactions" = "No star transactions yet";
+"chat.star_balance" = "Balance";
+
+// MARK: - QTC Credits
+
+"qtc.purchase_title" = "💎 QTC Credits";
+"qtc.purchase_desc" = "QTC (QingTeng Credits) unlocks additional Agent slots.\nFree players can add up to 20 Agents. Beyond that, each new Agent costs 1 QTC.\nCredits sync automatically via iCloud to your Apple ID.";
+"qtc.buy_10" = "💎 QTC ×10  %@";
+"qtc.buy_50" = "💎 QTC ×50  %@";
+"qtc.loading" = "💎 Loading...";
+"qtc.unavailable" = "💎 Unavailable";
+"qtc.processing" = "💎 Processing...";
+"qtc.success_title" = "🎉 Purchase Successful!";
+"qtc.success_msg" = "Received %d QTC! Current balance: %d QTC";
+"qtc.purchased_reason" = "Purchased QTC ×%d";
+"qtc.spend_agent" = "Unlock Agent slot";
+"qtc.dashboard_title" = "💎 QTC Credits Dashboard";
+"qtc.balance_display" = "💎 %d QTC    👥 %d/%d Agents";
+"qtc.free_slots" = "🆓 Free slots remaining: %d";
+"qtc.no_free_slots" = "🔒 Free slots used up. Adding new Agents costs 1 QTC each.";
+"qtc.no_transactions" = "No QTC transactions yet";
+"qtc.recent_transactions" = "── Recent Transactions ──";
+"qtc.restore" = "🔄 Restore Purchases";
+"qtc.restore_title" = "Restore Purchases";
+"qtc.restore_msg" = "QTC data synced from iCloud. If you purchased QTC on another device, your balance has been restored.";
+"qtc.limit_title" = "QTC Required";
+"qtc.limit_msg" = "Free slots (%d) are used up.\nCurrent QTC balance: %d\n\nPlease purchase QTC first. Each additional Agent costs 1 QTC.";
+"qtc.go_purchase" = "Buy QTC";
+"qtc.spend_title" = "Spend QTC";
+"qtc.spend_msg" = "Adding a new Agent will cost 1 QTC.\nCurrent balance: %d QTC\n\nContinue?";
+"qtc.spend_confirm" = "Confirm (−1 QTC)";
+
 // MARK: - Meta Pills (Model Edit)
 
 "meta.protocol" = "Protocol";
 "meta.auth" = "Auth";
 "meta.model" = "Model";
 "meta.context" = "Context";
+
+// MARK: - Subscription
+
+"settings.subscription" = "Subscription";
+"subscription.title" = "Subscription";
+"subscription.current_tier" = "Current Plan: %@";
+"subscription.benefits_title" = "Plan Comparison";
+"subscription.benefit_free" = "Free";
+"subscription.benefit_free_desc" = "Up to 20 Agents (expandable with QTC). Up to 5 QingTeng official Agents.";
+"subscription.benefit_plus" = "Plus";
+"subscription.benefit_plus_desc" = "Unlimited self-added Agents. Up to 10 Plus official Agents. Includes all Free benefits.";
+"subscription.benefit_pro" = "Pro";
+"subscription.benefit_pro_desc" = "Up to 5 Pro official Agents with high-performance models. Includes all Plus benefits.";
+"subscription.benefit_max" = "Max";
+"subscription.benefit_max_desc" = "Up to 3 Max official Agents with top-tier models. Includes all Pro benefits.";
+"subscription.choose_plan" = "Choose Your Plan";
+"subscription.plus_loading" = "Plus — Loading...";
+"subscription.pro_loading" = "Pro — Loading...";
+"subscription.max_loading" = "Max — Loading...";
+"subscription.current" = "Current Plan";
+"subscription.included" = "Included";
+"subscription.monthly" = "month";
+"subscription.unavailable" = "Unavailable";
+"subscription.processing" = "Processing...";
+"subscription.restore" = "Restore Purchases";
+"subscription.privacy" = "Privacy Policy";
+"subscription.terms" = "Terms of Service";
+"subscription.restore_title" = "Purchases Restored";
+"subscription.restore_msg" = "Your subscription has been verified. Current plan: %@";
+"subscription.auto_renew_notice" = "Subscriptions auto-renew monthly. You can cancel anytime in Settings > Apple ID > Subscriptions.";
+"subscription.official_limit_reached" = "%@ agents have reached the limit (%d). Please delete an existing one first.";
+
+// MARK: - Official Provider (Model Edit)
+
+"edit.official_tier_desc" = "%@ subscription exclusive. Up to %d official Agents.";
+"edit.official_key_missing" = "Official provider configuration error. Please reinstall the app.";
+"edit.free_tier_desc" = "System free model. Up to %d Agents.";
+"edit.free_tier_notice" = "⚠️ Free models are routed through shared providers and may be slow or unstable. For smarter, more stable Agents, consider ";
+"edit.free_tier_subscribe" = "subscribing";
+"models.free_model_label" = "System Free Model";
+
+// MARK: - Weather
+
+"weather.requesting_location" = "Getting location...";
+"weather.clear" = "Clear";
+"weather.rain" = "Rain";
+"weather.heavy_rain" = "Heavy Rain";
+"weather.snow" = "Snow";
+"weather.thunderstorm" = "Thunderstorm";
+"weather.fog" = "Fog";

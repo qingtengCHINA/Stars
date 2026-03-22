@@ -10,6 +10,8 @@
 "settings.header" = "─── 群星控制面板 ───";
 "settings.agent_management" = "Agent 管理";
 "settings.constitution" = "世界宪法";
+"settings.commands" = "通用命令";
+"settings.economy" = "经济系统";
 "settings.about" = "关于群星";
 
 // MARK: - Model Settings (Agent Management)
@@ -27,7 +29,7 @@
 "edit.back" = "← 返回";
 "edit.docs" = "📖 文档";
 "edit.section_alias" = "标签";
-"edit.placeholder_alias" = "AI 服务商名称";
+"edit.placeholder_alias" = "给 Agent 起个名字";
 "edit.section_apikey" = "API Key";
 "edit.apikey_hint" = "您的密钥安全存储在 iOS 钥匙串中，不会离开设备。";
 "edit.section_baseurl" = "自定义 API 地址（可选）";
@@ -74,6 +76,28 @@
 "constitution.cancel" = "取消";
 "constitution.reset_confirm" = "重置";
 
+// MARK: - Commands Editor
+
+"commands_editor.title" = "通用命令";
+"commands_editor.save" = "💾 保存";
+"commands_editor.reset" = "🔄 重置";
+"commands_editor.hint" = "编辑 Agent 可使用的命令。修改在下次思考时生效。";
+"commands_editor.reset_alert_title" = "⚠️ 重置命令规则";
+"commands_editor.reset_alert_message" = "恢复为默认的系统命令规则？\n当前的自定义修改将丢失。";
+"commands_editor.cancel" = "取消";
+"commands_editor.reset_confirm" = "重置";
+
+// MARK: - Economy Editor
+
+"economy_editor.title" = "经济系统";
+"economy_editor.save" = "💾 保存";
+"economy_editor.reset" = "🔄 重置";
+"economy_editor.hint" = "编辑经济规则和 [CONFIG] 参数。CONFIG 参数修改后立即作用于真实游戏机制。";
+"economy_editor.reset_alert_title" = "⚠️ 重置经济规则";
+"economy_editor.reset_alert_message" = "恢复为默认的经济系统规则？\n当前的自定义修改将丢失。";
+"economy_editor.cancel" = "取消";
+"economy_editor.reset_confirm" = "重置";
+
 // MARK: - About
 
 "about.title" = "关于群星";
@@ -113,6 +137,7 @@
 "chat.agent_missing" = "Agent 不存在";
 "chat.owner" = "主人";
 "chat.thinking" = "%@ 正在思考...";
+"chat.agent_paused" = "⚠️ 此 Agent 已暂停：需要 %@ 或更高订阅等级才能运行。请前往设置页订阅会员。";
 "chat.thought" = "💭 当前想法: %@";
 "chat.short_memory" = "── 短期记忆 (%d条) ──";
 "chat.long_memory" = "── 长期记忆: %d条 ──";
@@ -192,9 +217,121 @@
 "log.near_death" = "濒死状态";
 "log.near_death_msg" = "%@ 处于危急状态（HP: %d），速度减半。";
 
+// MARK: - Sound Settings
+
+"settings.sound" = "声音设置";
+"sound.title" = "声音设置";
+"sound.bgm_title" = "🎵 背景音乐";
+"sound.bgm_volume" = "音量: %d%%";
+"sound.sfx_title" = "🔫 音效";
+"sound.sfx_volume" = "音量: %d%%";
+"sound.tracklist" = "🎶 曲目列表";
+"sound.credit" = "音乐来自 www.fiftysounds.com/zh/";
+"sound.apple_music_title" = "Apple Music";
+"sound.apple_music_auth" = "授权 Apple Music";
+"sound.apple_music_denied" = "Apple Music 未授权";
+"sound.apple_music_play" = "播放歌单";
+"sound.apple_music_stop" = "停止播放";
+"sound.apple_music_empty" = "未找到音乐";
+"sound.apple_music_selected" = "已选 %d 首";
+"sound.bgm_source" = "BGM 来源";
+"sound.bgm_builtin" = "内置曲目";
+"sound.bgm_apple_music" = "Apple Music";
+
+// MARK: - About Music
+
+"about.music_title" = "🎵 音乐致谢";
+"about.music_from" = "音乐来自 www.fiftysounds.com/zh/";
+
+// MARK: - Chat Tabs
+
+"chat.tab_log" = "日志";
+"chat.tab_stars" = "⭐ 明细";
+"chat.no_transactions" = "暂无星星交易记录";
+"chat.star_balance" = "当前余额";
+
+// MARK: - QTC Credits
+
+"qtc.purchase_title" = "💎 QTC 积分";
+"qtc.purchase_desc" = "QTC (QingTeng Credits) 用于解锁更多 Agent 名额。\n免费玩家最多可添加 20 个 Agent，之后每添加 1 个需消耗 1 QTC。\n积分通过 iCloud 自动同步到你的 Apple ID。";
+"qtc.buy_10" = "💎 QTC ×10  %@";
+"qtc.buy_50" = "💎 QTC ×50  %@";
+"qtc.loading" = "💎 加载中...";
+"qtc.unavailable" = "💎 暂不可用";
+"qtc.processing" = "💎 处理中...";
+"qtc.success_title" = "🎉 购买成功！";
+"qtc.success_msg" = "获得 %d QTC 积分！当前余额: %d QTC";
+"qtc.purchased_reason" = "购买 QTC ×%d";
+"qtc.spend_agent" = "解锁 Agent 名额";
+"qtc.dashboard_title" = "💎 QTC 积分仪表盘";
+"qtc.balance_display" = "💎 %d QTC    👥 %d/%d Agents";
+"qtc.free_slots" = "🆓 免费名额剩余: %d 个";
+"qtc.no_free_slots" = "🔒 免费名额已用完，添加新 Agent 需消耗 1 QTC";
+"qtc.no_transactions" = "暂无 QTC 交易记录";
+"qtc.recent_transactions" = "── 近期明细 ──";
+"qtc.restore" = "🔄 恢复购买";
+"qtc.restore_title" = "恢复购买";
+"qtc.restore_msg" = "已从 iCloud 同步 QTC 积分数据。如果你在其他设备购买过 QTC，余额已自动恢复。";
+"qtc.limit_title" = "需要 QTC 积分";
+"qtc.limit_msg" = "免费名额 (%d 个) 已用完。\n当前 QTC 余额: %d\n\n请先购买 QTC 积分，每个额外 Agent 消耗 1 QTC。";
+"qtc.go_purchase" = "去购买 QTC";
+"qtc.spend_title" = "消耗 QTC";
+"qtc.spend_msg" = "添加新 Agent 将消耗 1 QTC。\n当前余额: %d QTC\n\n确定继续？";
+"qtc.spend_confirm" = "确定 (−1 QTC)";
+
 // MARK: - Meta Pills (Model Edit)
 
 "meta.protocol" = "协议";
 "meta.auth" = "鉴权";
 "meta.model" = "模型";
 "meta.context" = "上下文";
+
+// MARK: - Subscription
+
+"settings.subscription" = "订阅";
+"subscription.title" = "订阅";
+"subscription.current_tier" = "当前方案: %@";
+"subscription.benefits_title" = "方案对比";
+"subscription.benefit_free" = "Free 免费版";
+"subscription.benefit_free_desc" = "最多 20 个自建 Agent（可用 QTC 扩容）。最多 5 个 QingTeng 官方 Agent。";
+"subscription.benefit_plus" = "Plus";
+"subscription.benefit_plus_desc" = "无限自建 Agent。最多 10 个 Plus 官方 Agent。包含所有 Free 权益。";
+"subscription.benefit_pro" = "Pro";
+"subscription.benefit_pro_desc" = "最多 5 个 Pro 官方 Agent，使用高性能模型。包含所有 Plus 权益。";
+"subscription.benefit_max" = "Max";
+"subscription.benefit_max_desc" = "最多 3 个 Max 官方 Agent，使用顶级模型。包含所有 Pro 权益。";
+"subscription.choose_plan" = "选择方案";
+"subscription.plus_loading" = "Plus — 加载中...";
+"subscription.pro_loading" = "Pro — 加载中...";
+"subscription.max_loading" = "Max — 加载中...";
+"subscription.current" = "当前方案";
+"subscription.included" = "已包含";
+"subscription.monthly" = "月";
+"subscription.unavailable" = "暂不可用";
+"subscription.processing" = "处理中...";
+"subscription.restore" = "恢复购买";
+"subscription.privacy" = "隐私声明";
+"subscription.terms" = "用户协议";
+"subscription.restore_title" = "已恢复购买";
+"subscription.restore_msg" = "已验证您的订阅状态。当前方案: %@";
+"subscription.auto_renew_notice" = "订阅按月自动续费。可随时在 设置 > Apple ID > 订阅 中取消。";
+"subscription.official_limit_reached" = "%@ 的 Agent 数量已达上限 (%d 个)，请先删除已有的再添加。";
+
+// MARK: - Official Provider (Model Edit)
+
+"edit.official_tier_desc" = "%@ 订阅专属，最多可添加 %d 个官方 Agent。";
+"edit.official_key_missing" = "官方服务配置异常，请重新安装应用。";
+"edit.free_tier_desc" = "系统免费模型，最多可添加 %d 个。";
+"edit.free_tier_notice" = "⚠️ 免费模型通过路由调用，可能出现响应慢或不稳定的情况。如果想体验更智慧、更稳定的 Agent，请";
+"edit.free_tier_subscribe" = "订阅会员";
+"models.free_model_label" = "系统免费模型";
+
+// MARK: - Weather
+
+"weather.requesting_location" = "正在获取位置...";
+"weather.clear" = "晴朗";
+"weather.rain" = "下雨";
+"weather.heavy_rain" = "暴雨";
+"weather.snow" = "下雪";
+"weather.thunderstorm" = "雷暴";
+"weather.fog" = "雾";

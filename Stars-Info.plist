@@ -20,8 +20,12 @@
 	<string>public.app-category.games</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Stars 需要访问你的 Apple Music 曲库，以便将你喜爱的音乐设为游戏背景音乐。</string>
 	<key>NSGKFriendListUsageDescription</key>
 	<string>Stars 需要访问好友列表以便在游戏中找到朋友的 Agent。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Stars 需要获取你的位置来同步真实天气效果到游戏世界中。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -40,6 +40,13 @@ final class ModelSettingsViewController: UITableViewController {
         tableView.register(AgentListCell.self, forCellReuseIdentifier: "agentCell")
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 88
+
+        // Observe config changes so the list refreshes immediately
+        // (pageSheet modals don't trigger viewWillAppear on dismiss)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(handleConfigsChanged),
+            name: .modelConfigsDidChange, object: nil
+        )
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -51,11 +58,101 @@ final class ModelSettingsViewController: UITableViewController {
         updateEmptyState()
     }
 
+    @objc private func handleConfigsChanged() {
+        tableView.reloadData()
+        updateEmptyState()
+    }
+
     // MARK: - Actions
 
     @objc private func addModel() {
+        let tier = SubscriptionStore.shared.currentTier
+
+        // Subscribers (Plus/Pro/Max): unlimited self-added agents, skip limits
+        if tier >= .plus {
+            showProviderPicker()
+            return
+        }
+
+        // Free tier: enforce 20-agent limit (QTC expandable)
+        let store = QTCStore.shared
+        let currentCount = store.currentAgentCount
+
+        if currentCount >= QTCStore.freeAgentLimit {
+            if store.balance <= 0 {
+                // No QTC — show purchase prompt
+                let alert = UIAlertController(
+                    title: NSLocalizedString("qtc.limit_title", comment: ""),
+                    message: String(format: NSLocalizedString("qtc.limit_msg", comment: ""),
+                                    QTCStore.freeAgentLimit, store.balance),
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(
+                    title: NSLocalizedString("qtc.go_purchase", comment: ""),
+                    style: .default
+                ) { [weak self] _ in
+                    let vc = AboutViewController()
+                    self?.navigationController?.pushViewController(vc, animated: true)
+                })
+                alert.addAction(UIAlertAction(
+                    title: NSLocalizedString("edit.cancel", comment: ""),
+                    style: .cancel
+                ))
+                present(alert, animated: true)
+                return
+            }
+
+            // Has QTC — confirm spending
+            let alert = UIAlertController(
+                title: NSLocalizedString("qtc.spend_title", comment: ""),
+                message: String(format: NSLocalizedString("qtc.spend_msg", comment: ""),
+                                store.balance),
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(
+                title: NSLocalizedString("qtc.spend_confirm", comment: ""),
+                style: .default
+            ) { [weak self] _ in
+                if QTCStore.shared.spendForAgentSlot() {
+                    self?.showProviderPicker()
+                }
+            })
+            alert.addAction(UIAlertAction(
+                title: NSLocalizedString("edit.cancel", comment: ""),
+                style: .cancel
+            ))
+            present(alert, animated: true)
+            return
+        }
+
+        showProviderPicker()
+    }
+
+    private func showProviderPicker() {
         let picker = ProviderPickerViewController()
         picker.onSelect = { [weak self, weak picker] provider in
+            // Official provider: check per-provider agent limit
+            if provider.isOfficialProvider {
+                let currentOfProvider = ModelManager.shared.configs.filter { $0.provider == provider }.count
+                let limit = provider.officialAgentLimit
+                if currentOfProvider >= limit {
+                    picker?.dismiss(animated: true) {
+                        let alert = UIAlertController(
+                            title: NSLocalizedString("edit.alert_title", comment: ""),
+                            message: String(format: NSLocalizedString("subscription.official_limit_reached", comment: ""),
+                                            provider.displayName, limit),
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(
+                            title: NSLocalizedString("edit.alert_confirm", comment: ""),
+                            style: .default
+                        ))
+                        self?.present(alert, animated: true)
+                    }
+                    return
+                }
+            }
+
             picker?.dismiss(animated: true) {
                 self?.presentEditVC(mode: .add(provider))
             }
@@ -119,7 +216,8 @@ final class ModelSettingsViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "agentCell", for: indexPath) as! AgentListCell
         let config = configs[indexPath.row]
         let soul = SoulStore.shared.soul(for: config.id.uuidString)
-        cell.configure(config: config, soul: soul)
+        let agent = AgentManager.current?.agent(forConfigID: config.id)
+        cell.configure(config: config, soul: soul, agent: agent)
         return cell
     }
 
@@ -160,6 +258,8 @@ private final class AgentListCell: UITableViewCell {
     private let modelLabel = UILabel()
     private let soulLabel = UILabel()
     private let statusDot = UIView()
+    private let contextLabel = UILabel()
+    private let tokenLabel = UILabel()
     private let arrowLabel = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -194,6 +294,18 @@ private final class AgentListCell: UITableViewCell {
         soulLabel.translatesAutoresizingMaskIntoConstraints = false
         cardBg.addSubview(soulLabel)
 
+        contextLabel.font = PixelTheme.boldFont(size: 12)
+        contextLabel.textColor = PixelTheme.accentBlue
+        contextLabel.textAlignment = .right
+        contextLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardBg.addSubview(contextLabel)
+
+        tokenLabel.font = PixelTheme.bodyFont(size: 10)
+        tokenLabel.textColor = PixelTheme.textMuted
+        tokenLabel.textAlignment = .right
+        tokenLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardBg.addSubview(tokenLabel)
+
         arrowLabel.text = "▸"
         arrowLabel.font = PixelTheme.boldFont(size: 18)
         arrowLabel.textColor = PixelTheme.accentAmber
@@ -213,7 +325,7 @@ private final class AgentListCell: UITableViewCell {
 
             nameLabel.topAnchor.constraint(equalTo: cardBg.topAnchor, constant: 10),
             nameLabel.leadingAnchor.constraint(equalTo: statusDot.trailingAnchor, constant: 10),
-            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: arrowLabel.leadingAnchor, constant: -8),
+            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: contextLabel.leadingAnchor, constant: -8),
 
             modelLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 3),
             modelLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
@@ -224,6 +336,13 @@ private final class AgentListCell: UITableViewCell {
             soulLabel.trailingAnchor.constraint(equalTo: nameLabel.trailingAnchor),
             soulLabel.bottomAnchor.constraint(equalTo: cardBg.bottomAnchor, constant: -10),
 
+            // Right-side stats: context + token labels stacked vertically
+            contextLabel.trailingAnchor.constraint(equalTo: arrowLabel.leadingAnchor, constant: -6),
+            contextLabel.bottomAnchor.constraint(equalTo: cardBg.centerYAnchor, constant: -1),
+
+            tokenLabel.trailingAnchor.constraint(equalTo: contextLabel.trailingAnchor),
+            tokenLabel.topAnchor.constraint(equalTo: cardBg.centerYAnchor, constant: 1),
+
             arrowLabel.trailingAnchor.constraint(equalTo: cardBg.trailingAnchor, constant: -14),
             arrowLabel.centerYAnchor.constraint(equalTo: cardBg.centerYAnchor),
         ])
@@ -231,9 +350,15 @@ private final class AgentListCell: UITableViewCell {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(config: ModelConfig, soul: SoulDocument) {
+    func configure(config: ModelConfig, soul: SoulDocument, agent: Agent?) {
         nameLabel.text = config.alias
-        modelLabel.text = "\(config.provider.displayName) · \(config.modelName)"
+
+        // QingTeng (free tier): hide actual model name, show generic label
+        if config.provider == .starsOfficial {
+            modelLabel.text = "\(config.provider.displayName) · \(NSLocalizedString("models.free_model_label", comment: ""))"
+        } else {
+            modelLabel.text = "\(config.provider.displayName) · \(config.modelName)"
+        }
 
         if soul.isEmpty {
             soulLabel.text = NSLocalizedString("models.soul_empty", comment: "")
@@ -245,6 +370,28 @@ private final class AgentListCell: UITableViewCell {
         case .unknown:  statusDot.backgroundColor = PixelTheme.statusUnknown
         case .success:  statusDot.backgroundColor = PixelTheme.statusOK
         case .failure:  statusDot.backgroundColor = PixelTheme.statusFail
+        }
+
+        // Context usage display
+        if let agent = agent, let usage = agent.latestContextUsage {
+            contextLabel.text = "🧠 \(usage.percentageText)"
+            let ratio = usage.usageRatio
+            contextLabel.textColor = ratio > 0.8 ? PixelTheme.hpLow
+                                   : (ratio > 0.6 ? PixelTheme.hpMid
+                                                  : PixelTheme.accentBlue)
+        } else {
+            contextLabel.text = "🧠 --"
+            contextLabel.textColor = PixelTheme.textMuted
+        }
+
+        // Token consumption display
+        if let agent = agent {
+            let totalK = agent.totalTokensUsed > 1000
+                ? String(format: "%.1fK", Double(agent.totalTokensUsed) / 1000.0)
+                : "\(agent.totalTokensUsed)"
+            tokenLabel.text = "🪙 \(totalK)"
+        } else {
+            tokenLabel.text = "🪙 --"
         }
     }
 

@@ -82,7 +82,12 @@ final class ModelManager {
     }
 
     func apiKey(for configID: UUID) -> String? {
-        KeychainHelper.shared.read(for: keychainKey(configID))
+        // Official providers: always use bundled config (fresh keys survive app updates)
+        if let config = config(for: configID), config.provider.isOfficialProvider {
+            let key = OfficialProviderConfig.apiKey(for: config.provider)
+            return key.isEmpty ? nil : key
+        }
+        return KeychainHelper.shared.read(for: keychainKey(configID))
     }
 
     func config(for id: UUID) -> ModelConfig? {

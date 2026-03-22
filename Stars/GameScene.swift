@@ -6,11 +6,11 @@
 import SpriteKit
 import UIKit
 
-class GameScene: SKScene, SKPhysicsContactDelegate {
+class GameScene: SKScene, SKPhysicsContactDelegate, UIGestureRecognizerDelegate {
 
     private let cameraController = CameraController()
     private let chunkManager = ChunkManager()
-    private let agentManager = AgentManager()
+    private(set) var agentManager = AgentManager()
     private let buildSystem = BuildSystem()
     private let combatSystem = CombatSystem()
 
@@ -20,6 +20,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var lastUpdateTime: TimeInterval = 0
     private var autosaveAccumulator: TimeInterval = 0
     private var lastAmbientMinute: Int = -1
+    private var weatherNode: WeatherEffectNode!
     private var panGesture: UIPanGestureRecognizer?
     private var pinchGesture: UIPinchGestureRecognizer?
     private var tapGesture: UITapGestureRecognizer?
@@ -53,6 +54,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         combatSystem.agentLookup = { [weak self] entityID in
             self?.agentManager.agent(byID: entityID)
         }
+        combatSystem.allAgentsProvider = { [weak self] in
+            self?.agentManager.agents ?? []
+        }
+        combatSystem.isAgentSheltered = { [weak self] agent in
+            guard let self else { return false }
+            return agent.isRestingInHouse || self.buildSystem.isAgentInOwnHouse(agent)
+        }
 
         // Day/night ambient overlay — sits on top of worldNode, under HUD
         ambientOverlay = SKSpriteNode(color: .clear, size: view.bounds.size)
@@ -71,6 +79,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         clockLabel.zPosition = 1000
         cameraController.cameraNode.addChild(clockLabel)
 
+        // Weather effect overlay — above game world, below HUD
+        weatherNode = WeatherEffectNode()
+        weatherNode.zPosition = 950
+        cameraController.cameraNode.addChild(weatherNode)
+
         restoreWorldState()
 
         chunkManager.updateChunks(
@@ -83,11 +96,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view.isMultipleTouchEnabled = true
         installGesturesIfNeeded(on: view)
         registerObservers()
+
+        // Start background music
+        SoundManager.shared.startBGM()
+
+        // Start real-time weather monitoring
+        WeatherManager.shared.startMonitoring()
     }
 
     override func willMove(from view: SKView) {
         super.willMove(from: view)
         saveWorldState()
+        WeatherManager.shared.stopMonitoring()
         removeObservers()
         removeGestures(from: view)
     }
@@ -146,6 +166,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
 
+    // MARK: - UIGestureRecognizerDelegate
+
+    /// Let UIKit subviews (LeaderboardView, AgentChatView, HUD buttons) handle
+    /// their own taps.  Only the scene's tap gesture fires when the touch lands
+    /// directly on the SKView itself.
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldReceive touch: UITouch) -> Bool {
+        guard gestureRecognizer === tapGesture else { return true }
+        // If the touch view is not the SKView, a UIKit subview owns it → skip
+        return touch.view is SKView
+    }
+
     // MARK: - Game Loop
 
     override func update(_ currentTime: TimeInterval) {
@@ -194,6 +226,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         if tapGesture == nil {
             let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+            tap.delegate = self
             if let panGesture {
                 tap.require(toFail: panGesture)
             }
@@ -240,6 +273,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self,
             selector: #selector(handleScenePersistenceRequest),
             name: .starsPersistWorldState,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleConstitutionUpdated),
+            name: .starsConstitutionDidUpdate,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCommandsUpdated),
+            name: .starsCommandsDidUpdate,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleEconomyUpdated),
+            name: .starsEconomyDidUpdate,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleWeatherChanged),
+            name: WeatherManager.weatherDidChange,
             object: nil
         )
     }
@@ -345,5 +402,53 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     @objc private func handleScenePersistenceRequest() {
         saveWorldState()
+    }
+
+    @objc private func handleConstitutionUpdated() {
+        for agent in agentManager.agents {
+            agent.memory.record(
+                type: .observe,
+                content: "⚠️ 世界宪法已更新 (v\(StarsConstitution.version))。请重新阅读 WORLD RULES，了解最新规则变更。"
+            )
+        }
+        WorldEventLogStore.shared.append(
+            category: .command,
+            title: "宪法已更新",
+            message: "所有 Agent 已收到通知，将重新阅读最新版宪法 v\(StarsConstitution.version)。"
+        )
+    }
+
+    @objc private func handleCommandsUpdated() {
+        for agent in agentManager.agents {
+            agent.memory.record(
+                type: .observe,
+                content: "⚠️ 通用命令规则已被主人修改。请重新阅读 COMMAND RULES，了解最新的系统接口变更。"
+            )
+        }
+        WorldEventLogStore.shared.append(
+            category: .command,
+            title: "命令规则已更新",
+            message: "所有 Agent 已收到通知，将重新阅读最新命令规则。"
+        )
+    }
+
+    @objc private func handleEconomyUpdated() {
+        for agent in agentManager.agents {
+            agent.memory.record(
+                type: .observe,
+                content: "⚠️ 经济系统规则已被主人修改。请重新阅读 ECONOMY RULES，了解最新的经济与贸易规则变更。"
+            )
+        }
+        WorldEventLogStore.shared.append(
+            category: .command,
+            title: "经济规则已更新",
+            message: "所有 Agent 已收到通知，将重新阅读最新经济规则。"
+        )
+    }
+
+    @objc private func handleWeatherChanged() {
+        guard let view = self.view else { return }
+        let effect = WeatherManager.shared.currentEffect
+        weatherNode.updateEffect(effect, sceneSize: view.bounds.size)
     }
 }

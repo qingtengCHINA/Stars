@@ -17,8 +17,12 @@ final class SettingsViewController: UITableViewController {
     private var items: [MenuItem] {
         [
             MenuItem(title: NSLocalizedString("settings.agent_management", comment: ""), iconName: "机器人"),
+            MenuItem(title: NSLocalizedString("settings.subscription", comment: ""),     iconName: "Stars icon"),
             MenuItem(title: NSLocalizedString("settings.constitution", comment: ""),     iconName: "宪法"),
-            MenuItem(title: NSLocalizedString("settings.about", comment: ""),            iconName: "咖啡"),
+            MenuItem(title: NSLocalizedString("settings.commands", comment: ""),          iconName: "命令"),
+            MenuItem(title: NSLocalizedString("settings.economy", comment: ""),           iconName: "经济"),
+            MenuItem(title: NSLocalizedString("settings.sound", comment: ""),             iconName: "声音"),
+            MenuItem(title: NSLocalizedString("settings.about", comment: ""),             iconName: "咖啡"),
         ]
     }
 
@@ -100,7 +104,19 @@ final class SettingsViewController: UITableViewController {
             let vc = ModelSettingsViewController(style: .insetGrouped)
             navigationController?.pushViewController(vc, animated: true)
         case 1:
+            let vc = SubscriptionViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        case 2:
             let vc = ConstitutionViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        case 3:
+            let vc = CommandsEditorViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        case 4:
+            let vc = EconomyEditorViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        case 5:
+            let vc = SoundSettingsViewController()
             navigationController?.pushViewController(vc, animated: true)
         default:
             let vc = AboutViewController()

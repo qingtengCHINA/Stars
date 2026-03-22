@@ -54,6 +54,19 @@ final class BuildSystem {
             return nil
         }
 
+        // Economy: building costs Stars
+        let cost = type.buildCost
+        guard builder.spendStars(cost, reason: "Build \(type.rawValue)") else {
+            builder.memory.record(type: .build, content: "Build failed: not enough Stars. Need \(cost)⭐, have \(builder.stars)⭐.")
+            WorldEventLogStore.shared.append(
+                category: .build,
+                entityID: builder.entityID,
+                title: NSLocalizedString("log.build_failed", comment: ""),
+                message: "Not enough Stars to build \(type.rawValue). Need \(cost)⭐, have \(builder.stars)⭐."
+            )
+            return nil
+        }
+
         return createStructure(type: type, tileX: tileX, tileY: tileY, builder: builder)
     }
 

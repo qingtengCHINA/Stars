@@ -37,6 +37,10 @@ final class AgentChatView: UIView {
 
     // Detail toggle
     private let detailToggle = UIButton(type: .system)
+    private let detailSegment = UISegmentedControl(items: [
+        NSLocalizedString("chat.tab_log", comment: ""),
+        NSLocalizedString("chat.tab_stars", comment: ""),
+    ])
     private let detailView = UITextView()
     private var isDetailExpanded = false
     private var detailHeightConstraint: NSLayoutConstraint!
@@ -166,6 +170,23 @@ final class AgentChatView: UIView {
         detailToggle.translatesAutoresizingMaskIntoConstraints = false
         addSubview(detailToggle)
 
+        // -- Detail segment (tab switcher) --
+        detailSegment.selectedSegmentIndex = 0
+        detailSegment.translatesAutoresizingMaskIntoConstraints = false
+        detailSegment.backgroundColor = PixelTheme.bgInput
+        detailSegment.selectedSegmentTintColor = PixelTheme.bgLight
+        detailSegment.setTitleTextAttributes([
+            .foregroundColor: PixelTheme.textMuted,
+            .font: PixelTheme.boldFont(size: 11),
+        ], for: .normal)
+        detailSegment.setTitleTextAttributes([
+            .foregroundColor: PixelTheme.textGold,
+            .font: PixelTheme.boldFont(size: 11),
+        ], for: .selected)
+        detailSegment.addTarget(self, action: #selector(detailSegmentChanged), for: .valueChanged)
+        detailSegment.isHidden = true
+        addSubview(detailSegment)
+
         // -- Detail view (old journal style) --
         detailView.translatesAutoresizingMaskIntoConstraints = false
         detailView.backgroundColor = PixelTheme.bgInput
@@ -268,8 +289,14 @@ final class AgentChatView: UIView {
             detailToggle.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             detailToggle.heightAnchor.constraint(equalToConstant: 22),
 
+            // Detail segment
+            detailSegment.topAnchor.constraint(equalTo: detailToggle.bottomAnchor, constant: 2),
+            detailSegment.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
+            detailSegment.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+            detailSegment.heightAnchor.constraint(equalToConstant: 24),
+
             // Detail view
-            detailView.topAnchor.constraint(equalTo: detailToggle.bottomAnchor, constant: 2),
+            detailView.topAnchor.constraint(equalTo: detailSegment.bottomAnchor, constant: 2),
             detailView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
             detailView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
             detailHeightConstraint,
@@ -317,11 +344,16 @@ final class AgentChatView: UIView {
     @objc private func toggleDetail() {
         isDetailExpanded.toggle()
         detailView.isHidden = !isDetailExpanded
+        detailSegment.isHidden = !isDetailExpanded
         detailHeightConstraint.constant = isDetailExpanded ? 140 : 0
         detailToggle.setTitle(isDetailExpanded ? NSLocalizedString("chat.detail_expanded", comment: "") : NSLocalizedString("chat.detail_collapsed", comment: ""), for: .normal)
         UIView.animate(withDuration: 0.2) {
             self.layoutIfNeeded()
         }
+    }
+
+    @objc private func detailSegmentChanged() {
+        refreshDetail()
     }
 
     // MARK: - Refresh
@@ -388,6 +420,11 @@ final class AgentChatView: UIView {
     private func refreshDetail() {
         guard let agent, isDetailExpanded else { return }
 
+        if detailSegment.selectedSegmentIndex == 1 {
+            refreshStarTransactions()
+            return
+        }
+
         var lines = [String]()
 
         if let thought = agent.currentThought, !thought.isEmpty {
@@ -420,6 +457,33 @@ final class AgentChatView: UIView {
             for e in events {
                 lines.append("  [\(e.category.rawValue)] \(e.title): \(e.message)")
             }
+        }
+
+        detailView.text = lines.joined(separator: "\n")
+    }
+
+    private func refreshStarTransactions() {
+        guard let agent else { return }
+
+        let transactions = agent.starTransactions
+        if transactions.isEmpty {
+            detailView.text = NSLocalizedString("chat.no_transactions", comment: "")
+            return
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+
+        var lines = [String]()
+        lines.append("⭐ \(NSLocalizedString("chat.star_balance", comment: "")): \(agent.stars)")
+        lines.append("")
+
+        // Show most recent transactions (newest first)
+        for tx in transactions.suffix(20).reversed() {
+            let time = formatter.string(from: Date(timeIntervalSince1970: tx.timestamp))
+            let sign = tx.amount >= 0 ? "+" : ""
+            let amountStr = "\(sign)\(tx.amount)⭐"
+            lines.append("  [\(time)] \(amountStr) \(tx.reason) → \(tx.balance)⭐")
         }
 
         detailView.text = lines.joined(separator: "\n")

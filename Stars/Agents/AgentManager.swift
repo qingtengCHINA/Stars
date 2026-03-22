@@ -7,6 +7,10 @@ import SpriteKit
 
 final class AgentManager {
 
+    /// Lightweight accessor so UI (settings screens) can read agent data
+    /// without threading the manager through the navigation stack.
+    static weak var current: AgentManager?
+
     private(set) var agents: [Agent] = []
     var buildSystem: BuildSystem?
     private weak var worldNode: SKNode?
@@ -15,6 +19,7 @@ final class AgentManager {
 
     func attachTo(worldNode: SKNode) {
         self.worldNode = worldNode
+        AgentManager.current = self
 
         // Wire talk broadcast before spawning
         ActionResolver.talkBroadcast = { [weak self] speaker, message in
@@ -24,6 +29,16 @@ final class AgentManager {
         // Wire house-finding callback — lets /rest and /enter_house commands work
         ActionResolver.findOwnHouse = { [weak self] agent in
             self?.buildSystem?.findOwnHouseTile(agent)
+        }
+
+        // Wire agent lookup for economy commands (prefix match)
+        ActionResolver.agentLookup = { [weak self] prefix in
+            self?.resolveAgentByPrefix(prefix)
+        }
+
+        // Wire revive callback for Revival Cards
+        ActionResolver.reviveAgent = { [weak self] deadAgent in
+            self?.forceRevive(deadAgent)
         }
     }
 
@@ -46,6 +61,14 @@ final class AgentManager {
                     brain.nearbyEntitiesProvider = { [weak self] excludeID, position, radius in
                         self?.allEntitiesNear(position, tileRadius: radius, excludingID: excludeID) ?? []
                     }
+                    brain.leaderboardProvider = { [weak self] in
+                        self?.agents.map {
+                            (name: $0.displayName, stars: $0.stars, isDead: $0.isDead, entityID: $0.entityID)
+                        } ?? []
+                    }
+                    existing.nearestAgentProvider = { [weak self] targetPoint, excludeID in
+                        self?.nearestLivingAgent(to: targetPoint, excludingID: excludeID)
+                    }
                 } else {
                     assignBrain(to: existing, configID: config.id)
                 }
@@ -58,6 +81,13 @@ final class AgentManager {
                 entityID: config.id.uuidString,
                 modelConfigID: config.id
             )
+            // Record that the agent has read the World Constitution
+            let constitutionVersion = StarsConstitution.version
+            agent.memory.record(
+                type: .observe,
+                content: "📜 You have read the World Constitution (v\(constitutionVersion)). The Constitution is the supreme law of Stars — it defines combat, building, economy, diplomacy, death, and your rights as a citizen. It is always present in your prompt under '=== WORLD RULES ==='. Re-read it whenever you need guidance."
+            )
+
             WorldCommandRegistry.shared.onboardingEntries().forEach { entry in
                 agent.memory.record(type: .observe, content: entry)
             }
@@ -108,7 +138,9 @@ final class AgentManager {
                 respawnRemaining: snapshot.respawnRemaining,
                 stars: snapshot.stars,
                 houseRestAccumulator: snapshot.houseRestAccumulator,
-                visitedChunks: Set(snapshot.visitedChunks)
+                visitedChunks: Set(snapshot.visitedChunks),
+                weaponAmmo: snapshot.weaponAmmo,
+                revivalCards: snapshot.revivalCards
             )
             worldNode.addChild(agent)
             agents.append(agent)
@@ -128,6 +160,8 @@ final class AgentManager {
 
     // MARK: - Per-Frame Update
 
+    private var tradeExpirationAccumulator: TimeInterval = 0
+
     func update(deltaTime dt: TimeInterval) {
         for agent in agents {
             agent.update(deltaTime: dt)
@@ -137,6 +171,16 @@ final class AgentManager {
 
         // Clean up destroyed structures
         buildSystem?.removeDestroyedStructures()
+
+        // Expire old trades & update leaderboard bounty every 30 seconds
+        tradeExpirationAccumulator += dt
+        if tradeExpirationAccumulator >= 30 {
+            tradeExpirationAccumulator = 0
+            TradeManager.shared.expireOldTrades { [weak self] entityID in
+                self?.agent(byID: entityID)
+            }
+            updateTopAgentBounty()
+        }
     }
 
     // MARK: - Pending Build Processing
@@ -184,9 +228,8 @@ final class AgentManager {
 
     // MARK: - House Resting
 
-    /// 10 real hours (36000s) resting in own house → +5 HP.  HP > 50 → cannot rest.
+    /// Resting in own house → heal HP.  High HP → cannot rest.
     private static let houseRestThreshold: TimeInterval = 36000  // 10 hours
-    private static let houseHealAmount: Int = 5
 
     private func processHouseResting(for agent: Agent, dt: TimeInterval) {
         guard !agent.isDead else {
@@ -201,8 +244,8 @@ final class AgentManager {
         // Visual: show agent "inside" house when idle on own house tile
         agent.isRestingInHouse = onOwnHouse && agent.currentAction == .idle
 
-        // HP > 50 → not allowed to heal via rest (but still show resting visual)
-        guard agent.hp <= 50 else {
+        // HP above threshold → not allowed to heal via rest (but still show resting visual)
+        guard agent.hp <= EconomyConfig.shared.houseRestHPThreshold else {
             if agent.houseRestAccumulator > 0 {
                 agent.houseRestAccumulator = 0
             }
@@ -219,13 +262,14 @@ final class AgentManager {
 
         if agent.houseRestAccumulator >= Self.houseRestThreshold {
             agent.houseRestAccumulator = 0
-            agent.healHP(Self.houseHealAmount)
-            agent.memory.record(type: .observe, content: "Rested in my house for 10 hours. Recovered \(Self.houseHealAmount) HP (now \(agent.hp)/\(agent.maxHP)).")
+            let healAmt = EconomyConfig.shared.houseRestHealAmount
+            agent.healHP(healAmt)
+            agent.memory.record(type: .observe, content: "Rested in my house for 10 hours. Recovered \(healAmt) HP (now \(agent.hp)/\(agent.maxHP)).")
             WorldEventLogStore.shared.append(
                 category: .build,
                 entityID: agent.entityID,
                 title: NSLocalizedString("log.house_rest", comment: ""),
-                message: String(format: NSLocalizedString("log.house_rest_msg", comment: ""), agent.displayName, Self.houseHealAmount)
+                message: String(format: NSLocalizedString("log.house_rest_msg", comment: ""), agent.displayName, healAmt)
             )
         }
     }
@@ -237,7 +281,32 @@ final class AgentManager {
         brain.nearbyEntitiesProvider = { [weak self] excludeID, position, radius in
             self?.allEntitiesNear(position, tileRadius: radius, excludingID: excludeID) ?? []
         }
+        brain.leaderboardProvider = { [weak self] in
+            self?.agents.map {
+                (name: $0.displayName, stars: $0.stars, isDead: $0.isDead, entityID: $0.entityID)
+            } ?? []
+        }
+        // Homing weapon support: find nearest living enemy near a point
+        agent.nearestAgentProvider = { [weak self] targetPoint, excludeID in
+            self?.nearestLivingAgent(to: targetPoint, excludingID: excludeID)
+        }
         agent.brain = brain
+    }
+
+    /// Find nearest living agent to a point (for homing projectile targeting).
+    private func nearestLivingAgent(to point: CGPoint, excludingID: String) -> Agent? {
+        var closest: Agent?
+        var closestDist = CGFloat.infinity
+        for agent in agents {
+            guard agent.entityID != excludingID else { continue }
+            guard !agent.isDead else { continue }
+            let dist = hypot(agent.position.x - point.x, agent.position.y - point.y)
+            if dist < closestDist {
+                closestDist = dist
+                closest = agent
+            }
+        }
+        return closest
     }
 
     // MARK: - Talk Broadcast
@@ -330,6 +399,62 @@ final class AgentManager {
     /// Find an agent by entityID.
     func agent(byID entityID: String) -> Agent? {
         agents.first { $0.entityID == entityID }
+    }
+
+    /// Find an agent by its ModelConfig UUID.
+    func agent(forConfigID configID: UUID) -> Agent? {
+        agents.first { $0.representedModelConfigID == configID }
+    }
+
+    /// Resolve an agent by entity ID prefix (for economy commands).
+    /// LLM outputs often use the 8-character prefix shown in prompts.
+    func resolveAgentByPrefix(_ prefix: String) -> Agent? {
+        guard !prefix.isEmpty else { return nil }
+        // Try exact match first
+        if let exact = agents.first(where: { $0.entityID == prefix }) { return exact }
+        // Prefix match (LLM sees 8-char prefix)
+        return agents.first { $0.entityID.hasPrefix(prefix) }
+    }
+
+    // MARK: - Revival
+
+    /// Force-revive a dead agent (used by Revival Card).
+    func forceRevive(_ agent: Agent) {
+        guard agent.isDead else { return }
+        agent.forceRespawn()
+    }
+
+    // MARK: - Leaderboard
+
+    /// Returns agents sorted by stars (highest first). Ties broken by name.
+    func leaderboard() -> [Agent] {
+        agents.sorted { a, b in
+            if a.stars != b.stars { return a.stars > b.stars }
+            return a.displayName < b.displayName
+        }
+    }
+
+    /// Auto-bounty for #1 ranked agent. Called periodically.
+    /// Posts a system bounty of 10⭐ (free, not escrowed from any agent).
+    private var lastTopBountyAgentID: String?
+
+    func updateTopAgentBounty() {
+        let board = leaderboard()
+        guard let top = board.first, top.stars > 0, board.count >= 2 else { return }
+        // Only post if the #1 agent changed
+        guard top.entityID != lastTopBountyAgentID else { return }
+
+        // Remove old system bounty if any
+        if let oldID = lastTopBountyAgentID {
+            BountyBoard.shared.removeSystemBounty(targetID: oldID)
+        }
+
+        lastTopBountyAgentID = top.entityID
+        BountyBoard.shared.postSystemBounty(
+            targetID: top.entityID,
+            targetName: top.displayName,
+            reward: EconomyConfig.shared.systemBountyReward
+        )
     }
 
     private static func agentColor(for configID: UUID) -> UIColor {
