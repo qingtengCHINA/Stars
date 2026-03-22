@@ -67,9 +67,10 @@ final class QTCStore {
         currentAgentCount < Self.freeAgentLimit
     }
 
-    /// Can the player add another agent (free or with QTC)?
+    /// Can the player add another agent (free, via subscription, or with QTC)?
     var canAddAgent: Bool {
-        currentAgentCount < Self.freeAgentLimit || balance > 0
+        if SubscriptionStore.shared.currentTier >= .plus { return true }
+        return currentAgentCount < maxAgents || balance > 0
     }
 
     /// How many more free slots remain.
@@ -100,13 +101,17 @@ final class QTCStore {
             self.transactions = decoded
         }
 
-        // Listen for iCloud changes
+        // Listen for iCloud changes — must observe on main queue since
+        // QTCStore is @MainActor and mutations must happen on the main thread.
         NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(iCloudChanged),
-            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
-            object: NSUbiquitousKeyValueStore.default
-        )
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: NSUbiquitousKeyValueStore.default,
+            queue: .main
+        ) { [weak self] notification in
+            MainActor.assumeIsolated {
+                self?.handleICloudChange(notification)
+            }
+        }
 
         // Force an initial sync
         persist()
@@ -114,7 +119,7 @@ final class QTCStore {
 
     // MARK: - iCloud Sync
 
-    @objc private func iCloudChanged(_ notification: Notification) {
+    private func handleICloudChange(_ notification: Notification) {
         let cloud = NSUbiquitousKeyValueStore.default
         if let cloudBal = cloud.object(forKey: balanceKey) as? Int {
             if cloudBal > balance {

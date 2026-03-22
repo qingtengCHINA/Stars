@@ -402,7 +402,7 @@ enum ProviderPayloadCodec {
             // Search for a JSON object containing "thought" and "action" keys
             if let start = thinkingText.range(of: "{"),
                let end = thinkingText.range(of: "}", options: .backwards) {
-                let candidate = String(thinkingText[start.lowerBound...end.upperBound])
+                let candidate = String(thinkingText[start.lowerBound...end.lowerBound])
                 if candidate.contains("\"thought\"") && candidate.contains("\"action\"") {
                     if let data = candidate.data(using: .utf8),
                        (try? JSONSerialization.jsonObject(with: data)) != nil {

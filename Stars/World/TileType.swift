@@ -27,4 +27,28 @@ enum TileType: Int, CaseIterable, Codable, Sendable {
         case .stone:     return UIColor(red: 0.42, green: 0.44, blue: 0.46, alpha: 1)
         }
     }
+
+    /// Subtle variation color — very close to base for natural texture.
+    var altColor: UIColor {
+        switch self {
+        case .deepWater: return UIColor(red: 0.07, green: 0.16, blue: 0.28, alpha: 1)
+        case .water:     return UIColor(red: 0.16, green: 0.32, blue: 0.47, alpha: 1)
+        case .sand:      return UIColor(red: 0.70, green: 0.62, blue: 0.41, alpha: 1)
+        case .grass:     return UIColor(red: 0.32, green: 0.58, blue: 0.29, alpha: 1)
+        case .darkGrass: return UIColor(red: 0.22, green: 0.42, blue: 0.21, alpha: 1)
+        case .flowers:   return UIColor(red: 0.75, green: 0.50, blue: 0.45, alpha: 1)
+        case .dirt:      return UIColor(red: 0.46, green: 0.35, blue: 0.23, alpha: 1)
+        case .stone:     return UIColor(red: 0.40, green: 0.42, blue: 0.44, alpha: 1)
+        }
+    }
+
+    /// Accent color for small details (flowers, sparkles, ripples).
+    var detailColor: UIColor? {
+        switch self {
+        case .flowers:   return UIColor(red: 0.95, green: 0.85, blue: 0.30, alpha: 1) // yellow petals
+        case .water:     return UIColor(red: 0.30, green: 0.50, blue: 0.65, alpha: 1) // light ripple
+        case .deepWater: return UIColor(red: 0.12, green: 0.25, blue: 0.38, alpha: 1) // subtle wave
+        default:         return nil
+        }
+    }
 }

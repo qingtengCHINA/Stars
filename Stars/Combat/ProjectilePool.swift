@@ -35,6 +35,7 @@ final class ProjectilePool {
 
     /// Return a projectile to the pool instead of deallocating it.
     func recycle(_ projectile: Projectile) {
+        guard !pool.contains(where: { $0 === projectile }) else { return }
         projectile.removeAllActions()
         projectile.removeFromParent()
         projectile.physicsBody?.velocity = .zero

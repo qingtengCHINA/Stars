@@ -308,6 +308,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, UIGestureRecognizerDelegate 
     // MARK: - Day/Night Cycle
 
     private func updateDayNight() {
+        // Throttle — only changes once per in-game minute
+        let currentMinute = WorldClock.shared.minute + WorldClock.shared.hour * 60
+        guard currentMinute != lastAmbientMinute else { return }
+        lastAmbientMinute = currentMinute
+
         // Overlay & HUD are children of the camera node.
         // Camera children render at their local size on screen (camera scale cancels out),
         // so we use view.bounds directly — NOT multiplied by scale.
@@ -325,11 +330,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, UIGestureRecognizerDelegate 
                 y: vh / 2 - safeTop - 6
             )
         }
-
-        // Throttle tint color computation — only changes once per in-game minute
-        let currentMinute = WorldClock.shared.minute + WorldClock.shared.hour * 60
-        guard currentMinute != lastAmbientMinute else { return }
-        lastAmbientMinute = currentMinute
 
         let (color, alpha) = WorldClock.shared.ambientTint
         ambientOverlay.color = color

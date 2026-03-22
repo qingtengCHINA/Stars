@@ -17,7 +17,7 @@ final class Projectile: SKSpriteNode {
     private(set) var isHoming: Bool = false
     private(set) var projectileSpeed: CGFloat = 0
     weak var homingTarget: Agent?
-    private var trail: SKEmitterNode?
+    private var trail: SKNode?
 
     init(ownerID: String, damage: Int, direction: CGVector,
          speed: CGFloat, weaponID: String = "pistol",
@@ -268,6 +268,7 @@ final class Projectile: SKSpriteNode {
             return
         }
 
+        self.trail = trailNode
         addChild(trailNode)
     }
 

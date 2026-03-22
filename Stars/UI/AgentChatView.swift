@@ -407,7 +407,8 @@ final class AgentChatView: UIView {
             newEntries.append(("···", String(format: NSLocalizedString("chat.thinking", comment: ""), agent.displayName)))
         }
 
-        let needsReload = newEntries.count != chatEntries.count
+        let lastChanged = newEntries.last?.1 != chatEntries.last?.1
+        let needsReload = newEntries.count != chatEntries.count || lastChanged
         chatEntries = newEntries
         if needsReload {
             chatTableView.reloadData()

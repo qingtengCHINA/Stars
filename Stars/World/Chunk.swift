@@ -35,8 +35,17 @@ final class Chunk: SKSpriteNode {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // Renders a 16x16 pixel texture (1 pixel per tile) with nearest-neighbor filtering
-    // for crisp pixel-art upscaling to 256x256 points.
+    /// Simple integer hash for pseudo-random dithering (no visible pattern).
+    @inline(__always)
+    private static func tileHash(_ x: Int, _ y: Int) -> Int {
+        var h = x &* 374761393 &+ y &* 668265263
+        h = (h ^ (h >> 13)) &* 1274126177
+        return h ^ (h >> 16)
+    }
+
+    // Renders a 16x16 pixel texture (1 pixel per tile) with sparse
+    // pseudo-random sub-pixel variation to break up flat color blocks.
+    // Nearest-neighbor filtering preserves the pixel-art look.
     private static func renderTexture(from tiles: [[TileType]]) -> SKTexture {
         let count = tileCount
         let format = UIGraphicsImageRendererFormat()
@@ -51,8 +60,25 @@ final class Chunk: SKSpriteNode {
             for iy in 0..<count {
                 let tileY = count - 1 - iy // flip Y: image top → world top
                 for ix in 0..<count {
-                    tiles[tileY][ix].color.setFill()
+                    let tile = tiles[tileY][ix]
+
+                    // Hash-based pseudo-random: ~25% of tiles get altColor
+                    let h = tileHash(ix, iy)
+                    let useAlt = (h & 3) == 0 // 25% probability
+
+                    if useAlt {
+                        tile.altColor.setFill()
+                    } else {
+                        tile.color.setFill()
+                    }
                     ctx.fill(CGRect(x: ix, y: iy, width: 1, height: 1))
+
+                    // Sparse accent detail for flowers, water (~12% of tiles)
+                    if let detail = tile.detailColor,
+                       (h & 7) == 1 {
+                        detail.setFill()
+                        ctx.fill(CGRect(x: ix, y: iy, width: 1, height: 1))
+                    }
                 }
             }
         }

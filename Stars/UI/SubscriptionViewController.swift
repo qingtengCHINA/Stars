@@ -273,13 +273,15 @@ final class SubscriptionViewController: UIViewController {
             do {
                 let success = try await SubscriptionStore.shared.purchase(product)
                 if success {
-                    refreshUI()
+                    await MainActor.run { self.refreshUI() }
                 }
             } catch {
                 print("[SubscriptionVC] Purchase error: \(error)")
             }
-            sender.isEnabled = true
-            refreshButtonTitles()
+            await MainActor.run {
+                sender.isEnabled = true
+                self.refreshButtonTitles()
+            }
         }
     }
 

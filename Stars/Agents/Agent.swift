@@ -235,26 +235,45 @@ final class Agent: SKSpriteNode {
 
     // MARK: - Resting Visual
 
+    /// Stores the saved z-position before entering the house.
+    private var savedZPosition: CGFloat?
+
     private func updateRestingVisual() {
         if isRestingInHouse {
-            // Agent is inside their house — render semi-transparent with zzz indicator
-            if !isDead { alpha = 0.35 }
+            // Agent is inside their house — render behind the house with reduced visibility
+            if !isDead { alpha = 0.45 }
+
+            // Push agent z-position below the structure layer so the house
+            // roof covers the agent, making them appear truly "inside".
+            if savedZPosition == nil {
+                savedZPosition = zPosition
+                zPosition = ZSort.terrain + 1
+            }
+
             if restingNode == nil {
                 let zzz = SKLabelNode(text: "💤")
-                zzz.fontSize = 8
-                zzz.position = CGPoint(x: 0, y: Self.agentSize / 2 + 16)
-                zzz.zPosition = 4
+                zzz.fontSize = 10
+                // Position high enough to appear above the house roof
+                zzz.position = CGPoint(x: 0, y: Self.agentSize / 2 + 28)
+                // High z so the indicator is visible above everything
+                zzz.zPosition = ZSort.projectile + 5
                 zzz.name = "restingIndicator"
                 addChild(zzz)
                 restingNode = zzz
                 // Gentle floating animation
-                let floatUp = SKAction.moveBy(x: 0, y: 3, duration: 1.2)
-                let floatDown = SKAction.moveBy(x: 0, y: -3, duration: 1.2)
+                let floatUp = SKAction.moveBy(x: 0, y: 4, duration: 1.5)
+                let floatDown = SKAction.moveBy(x: 0, y: -4, duration: 1.5)
+                floatUp.timingMode = .easeInEaseOut
+                floatDown.timingMode = .easeInEaseOut
                 zzz.run(SKAction.repeatForever(SKAction.sequence([floatUp, floatDown])))
             }
         } else {
-            // Not resting — restore full visibility
+            // Not resting — restore full visibility and z-position
             if !isDead { alpha = 1.0 }
+            if let sz = savedZPosition {
+                zPosition = sz
+                savedZPosition = nil
+            }
             if let node = restingNode {
                 node.removeAllActions()
                 node.removeFromParent()
@@ -690,7 +709,10 @@ final class Agent: SKSpriteNode {
     func update(deltaTime dt: TimeInterval) {
 
         // Update depth sorting based on y-position
-        zPosition = ZSort.depthZ(for: position.y)
+        // Skip when resting in house — agent is deliberately placed behind structures
+        if !isRestingInHouse {
+            zPosition = ZSort.depthZ(for: position.y)
+        }
 
         // Walk animation: toggle based on movement
         let vel = physicsBody?.velocity ?? .zero

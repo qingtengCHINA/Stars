@@ -30,6 +30,7 @@ final class AgentBrain {
     private(set) var isThinking = false
     private var hasQueuedThink = false
     private var thinkCount = 0
+    private var thinkTask: Task<Void, Never>?
 
     // Death control — when stopped, no API calls are made
     private(set) var isStopped = false
@@ -68,9 +69,12 @@ final class AgentBrain {
     // MARK: - Stop / Resume (Death System)
 
     /// Stop the brain — called when agent dies. No more API calls.
+    /// The in-flight Task (if any) is cancelled; its `defer` block owns
+    /// the `isThinking` flag and slot release — we never force-clear them.
     func stop() {
         isStopped = true
-        isThinking = false
+        thinkTask?.cancel()
+        thinkTask = nil
         hasQueuedThink = false
         tickAccumulator = 0
     }
@@ -79,6 +83,7 @@ final class AgentBrain {
     func resume() {
         isStopped = false
         tickAccumulator = 0
+        thinkCount = 0
     }
 
     // MARK: - Tick
@@ -154,12 +159,15 @@ final class AgentBrain {
         tickAccumulator = 0
         isThinking = true
 
-        Task { [weak self, weak agent] in
+        thinkTask = Task { [weak self, weak agent] in
             defer {
                 LLMService.shared.releaseSlot()
                 self?.isThinking = false
+                self?.thinkTask = nil
                 self?.drainQueuedThinkIfNeeded()
             }
+
+            guard !Task.isCancelled else { return }
 
             do {
                 // Only retry parse failures when the player is waiting for a reply.
@@ -182,6 +190,9 @@ final class AgentBrain {
                         agent.updateContextUsage(usage)
                     }
                     ActionResolver.execute(response, on: agent)
+                    // Clear messages only after a successful response —
+                    // if the request fails, messages are preserved for the next attempt.
+                    agent.shortTermMessages.removeAll()
                 }
             } catch {
                 if let agent {
@@ -361,7 +372,9 @@ final class AgentBrain {
             LongTermMemory.shared.decayStaleEntries(for: agent.entityID)
         }
 
-        agent.shortTermMessages.removeAll()
+        // Note: shortTermMessages are cleared by the caller (think())
+        // AFTER the LLM response succeeds, to avoid losing messages if the
+        // request fails or the agent dies mid-flight.
         return prompt
     }
 

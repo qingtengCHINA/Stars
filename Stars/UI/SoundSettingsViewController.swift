@@ -351,11 +351,12 @@ final class SoundSettingsViewController: UIViewController {
             updateAppleMusicSelectedLabel()
             // Load library if empty
             if mgr.librarySongs.isEmpty {
-                Task {
+                Task { [weak self] in
                     await mgr.loadLibrary()
-                    appleMusicSongTable.reloadData()
+                    guard let self else { return }
+                    self.appleMusicSongTable.reloadData()
                     if mgr.librarySongs.isEmpty {
-                        appleMusicStatusLabel.text = NSLocalizedString("sound.apple_music_empty", comment: "No Music Found")
+                        self.appleMusicStatusLabel.text = NSLocalizedString("sound.apple_music_empty", comment: "No Music Found")
                     }
                 }
             }

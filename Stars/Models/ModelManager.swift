@@ -9,6 +9,7 @@ extension Notification.Name {
     static let modelConfigsDidChange = Notification.Name("stars.modelConfigsDidChange")
 }
 
+@MainActor
 final class ModelManager {
     static let shared = ModelManager()
 

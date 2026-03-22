@@ -165,7 +165,7 @@ final class AgentManager {
     func update(deltaTime dt: TimeInterval) {
         for agent in agents {
             agent.update(deltaTime: dt)
-            processPendingBuild(for: agent)
+            processPendingBuild(for: agent, dt: dt)
             processHouseResting(for: agent, dt: dt)
         }
 
@@ -187,7 +187,7 @@ final class AgentManager {
 
     private var buildTimeouts: [String: TimeInterval] = [:]
 
-    private func processPendingBuild(for agent: Agent) {
+    private func processPendingBuild(for agent: Agent, dt: TimeInterval) {
         guard let build = agent.pendingBuild else {
             buildTimeouts.removeValue(forKey: agent.entityID)
             return
@@ -208,7 +208,7 @@ final class AgentManager {
             )
         } else {
             // Agent still en route — track timeout
-            let elapsed = (buildTimeouts[agent.entityID] ?? 0) + (1.0 / 60.0)
+            let elapsed = (buildTimeouts[agent.entityID] ?? 0) + dt
             buildTimeouts[agent.entityID] = elapsed
             if elapsed > 15.0 {
                 // Timeout: cancel build after 15 seconds of trying to reach target
@@ -412,8 +412,9 @@ final class AgentManager {
         guard !prefix.isEmpty else { return nil }
         // Try exact match first
         if let exact = agents.first(where: { $0.entityID == prefix }) { return exact }
-        // Prefix match (LLM sees 8-char prefix)
-        return agents.first { $0.entityID.hasPrefix(prefix) }
+        // Prefix match (LLM sees 8-char prefix) — return nil on ambiguity
+        let matches = agents.filter { $0.entityID.hasPrefix(prefix) }
+        return matches.count == 1 ? matches.first : nil
     }
 
     // MARK: - Revival

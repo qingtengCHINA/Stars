@@ -317,16 +317,33 @@ final class GameStateStore {
     private init() {}
 
     func save(_ snapshot: GameStateSnapshot) {
+        // Encode on the main thread (fast), then write to disk in the background
+        // to avoid blocking the SpriteKit render loop with file I/O.
+        let data: Data
         do {
-            let data = try encoder.encode(snapshot)
-            let url = try snapshotURL()
-            let directoryURL = url.deletingLastPathComponent()
-            try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
-            try data.write(to: url, options: .atomic)
-            try excludeFromBackup(url: url)
-            UserDefaults.standard.removeObject(forKey: legacyStorageKey)
+            data = try encoder.encode(snapshot)
         } catch {
-            print("[Persistence] Failed to save world state: \(error.localizedDescription)")
+            print("[Persistence] Failed to encode world state: \(error.localizedDescription)")
+            return
+        }
+
+        let fm = fileManager
+        let legacyKey = legacyStorageKey
+        let urlResult = Result { try snapshotURL() }
+
+        Task.detached(priority: .utility) {
+            do {
+                let url = try urlResult.get()
+                let dir = url.deletingLastPathComponent()
+                try fm.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
+                try data.write(to: url, options: .atomic)
+                try? Self.excludeFromBackupStatic(url: url)
+                await MainActor.run {
+                    UserDefaults.standard.removeObject(forKey: legacyKey)
+                }
+            } catch {
+                print("[Persistence] Failed to save world state: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -369,6 +386,10 @@ final class GameStateStore {
     }
 
     private func excludeFromBackup(url: URL) throws {
+        try Self.excludeFromBackupStatic(url: url)
+    }
+
+    nonisolated private static func excludeFromBackupStatic(url: URL) throws {
         var resourceValues = URLResourceValues()
         resourceValues.isExcludedFromBackup = true
         var mutableURL = url

@@ -138,8 +138,15 @@ final class TradeManager {
 
         let offer = pendingTrades.remove(at: idx)
 
-        // Refund escrowed stars
-        refundTo?.receiveStars(offer.starsAmount, from: "trade refund")
+        // Refund escrowed stars — if the offeror is not found, re-insert
+        // the trade so the expiry system can refund them later.
+        if let refundTo {
+            refundTo.receiveStars(offer.starsAmount, from: "trade refund")
+        } else {
+            pendingTrades.insert(offer, at: idx)
+            decliner.memory.record(type: .observe, content: "Cannot decline: offeror not found for refund.")
+            return false
+        }
 
         decliner.memory.record(type: .talk, content: "Declined trade from \(offer.offerorName): \(offer.starsAmount)⭐ for \"\(offer.description)\". Stars refunded.")
 

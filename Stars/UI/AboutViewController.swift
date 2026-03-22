@@ -631,13 +631,9 @@ final class AboutViewController: UIViewController {
                             amount
                         ))
                         showQTCPurchaseSuccess(amount: amount)
-                    case .unverified(let transaction, _):
-                        await transaction.finish()
-                        QTCStore.shared.addCredits(amount, reason: String(
-                            format: NSLocalizedString("qtc.purchased_reason", comment: ""),
-                            amount
-                        ))
-                        showQTCPurchaseSuccess(amount: amount)
+                    case .unverified:
+                        // Unverified transactions are not granted — potential tampering.
+                        print("[AboutVC] QTC purchase unverified — not granting credits.")
                     }
                 case .userCancelled:
                     break
@@ -649,11 +645,13 @@ final class AboutViewController: UIViewController {
             } catch {
                 print("[AboutVC] QTC purchase error: \(error)")
             }
-            // Reset button
-            button?.isEnabled = true
-            if let product = (amount == 10 ? qtc10Product : qtc50Product) {
-                let key = amount == 10 ? "qtc.buy_10" : "qtc.buy_50"
-                button?.setTitle(String(format: NSLocalizedString(key, comment: ""), product.displayPrice), for: .normal)
+            // Reset button — ensure UIKit updates are on the main thread
+            await MainActor.run {
+                button?.isEnabled = true
+                if let product = (amount == 10 ? self.qtc10Product : self.qtc50Product) {
+                    let key = amount == 10 ? "qtc.buy_10" : "qtc.buy_50"
+                    button?.setTitle(String(format: NSLocalizedString(key, comment: ""), product.displayPrice), for: .normal)
+                }
             }
         }
     }
@@ -684,7 +682,7 @@ final class AboutViewController: UIViewController {
                         await transaction.finish()
                         showThanks()
                     case .unverified:
-                        showThanks()
+                        print("[AboutVC] Tip purchase unverified — skipping.")
                     }
                 case .userCancelled:
                     break
@@ -696,9 +694,11 @@ final class AboutViewController: UIViewController {
             } catch {
                 print("[AboutVC] Purchase error: \(error)")
             }
-            tipButton?.isEnabled = true
-            if let product = tipProduct {
-                tipButton?.setTitle(String(format: NSLocalizedString("about.tip_buy", comment: ""), product.displayPrice), for: .normal)
+            await MainActor.run {
+                self.tipButton?.isEnabled = true
+                if let product = self.tipProduct {
+                    self.tipButton?.setTitle(String(format: NSLocalizedString("about.tip_buy", comment: ""), product.displayPrice), for: .normal)
+                }
             }
         }
     }
@@ -721,14 +721,16 @@ final class AboutViewController: UIViewController {
             // For consumables, finished transactions are gone, but we reconcile iCloud
             QTCStore.shared.reconcileFromICloud()
 
-            let alert = UIAlertController(
-                title: NSLocalizedString("qtc.restore_title", comment: ""),
-                message: NSLocalizedString("qtc.restore_msg", comment: ""),
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: NSLocalizedString("about.tip_thanks_ok", comment: ""), style: .default))
-            present(alert, animated: true)
-            refreshQTCDashboard()
+            await MainActor.run {
+                let alert = UIAlertController(
+                    title: NSLocalizedString("qtc.restore_title", comment: ""),
+                    message: NSLocalizedString("qtc.restore_msg", comment: ""),
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: NSLocalizedString("about.tip_thanks_ok", comment: ""), style: .default))
+                self.present(alert, animated: true)
+                self.refreshQTCDashboard()
+            }
         }
     }
 
