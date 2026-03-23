@@ -87,7 +87,7 @@ Stars/
 │   ├── Chunk.swift             # 地图分块（16×16 tile chunk）
 │   ├── ChunkManager.swift      # 可视区域分块加载/卸载
 │   ├── TerrainGenerator.swift  # 程序化地形生成（Perlin noise）
-│   ├── TileType.swift          # 地形类型枚举（深水/浅水/沙滩/草地/森林/山地/雪地）
+│   ├── TileType.swift          # 地形类型枚举（deepWater/water/sand/grass/darkGrass/flowers/dirt/stone）
 │   ├── Structure.swift         # 结构物 SKSpriteNode（墙/陷阱/房屋），像素纹理生成
 │   ├── WorldClock.swift        # 世界时钟（跟随设备真实时间）
 │   ├── WorldCommandRegistry.swift    # 世界命令注册表（内置+自定义命令）
@@ -324,7 +324,7 @@ Stars/
 │   ├── Chunk.swift             # Map chunking (16×16 tile chunks)
 │   ├── ChunkManager.swift      # Visible-area chunk loading/unloading
 │   ├── TerrainGenerator.swift  # Procedural terrain generation (Perlin noise)
-│   ├── TileType.swift          # Terrain type enum (deepWater/water/sand/grass/forest/mountain/snow)
+│   ├── TileType.swift          # Terrain type enum (deepWater/water/sand/grass/darkGrass/flowers/dirt/stone)
 │   ├── Structure.swift         # Structure SKSpriteNode (wall/trap/house), pixel texture generation
 │   ├── WorldClock.swift        # World clock (follows real device time)
 │   ├── WorldCommandRegistry.swift    # World command registry (built-in + custom commands)
@@ -489,3 +489,17 @@ Stars/
 Open source project. See repository for license details.
 
 Made By [QingTengStudio](https://qingtengstudio.com/)
+
+---
+
+## 支持作者 / Support the Developer
+
+如果 Stars 让你感到有趣或启发，欢迎请我喝杯咖啡 ☕
+
+If Stars brought you joy or inspiration, feel free to buy me a coffee ☕
+
+**Buy Me a Coffee：** [buymeacoffee.com/qingteng](https://buymeacoffee.com/qingteng)
+
+**BNB：** `0xbd292ae2d32557664827279c0b87268364464df5`
+
+**SOL：** `EEZvAFW8QHC8zSR92p2AyJXkNbmxX97jCm7JasadQAQg`
