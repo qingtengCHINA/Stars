@@ -314,7 +314,10 @@
 "subscription.terms" = "Terms of Service";
 "subscription.restore_title" = "Purchases Restored";
 "subscription.restore_msg" = "Your subscription has been verified. Current plan: %@";
-"subscription.auto_renew_notice" = "Subscriptions auto-renew monthly. You can cancel anytime in Settings > Apple ID > Subscriptions.";
+"subscription.auto_renew_notice" = "Subscriptions auto-renew monthly. Payment is charged within 24 hours before the current period ends. You can cancel anytime in Settings > Apple ID > Subscriptions.";
+"subscription.detail_notice" = "All subscriptions are auto-renewable monthly subscriptions. Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews within 24 hours before the end of the current period unless auto-renew is turned off beforehand.";
+"subscription.terms_eula" = "Terms of Use (EULA)";
+"subscription.monthly_period" = "month";
 "subscription.official_limit_reached" = "%@ agents have reached the limit (%d). Please delete an existing one first.";
 
 // MARK: - Official Provider (Model Edit)
@@ -325,6 +328,17 @@
 "edit.free_tier_notice" = "⚠️ Free models are routed through shared providers and may be slow or unstable. For smarter, more stable Agents, consider ";
 "edit.free_tier_subscribe" = "subscribing";
 "models.free_model_label" = "System Free Model";
+
+// MARK: - Location & Weather (About page)
+
+"about.weather_title" = "📍 Location & Weather Sync";
+"about.weather_desc" = "Stars uses Apple WeatherKit to fetch real-time weather at your current location and sync it into the game world.\n\nWhen enabled, the app requests \"While Using\" location permission (accuracy: kilometer-level) solely for weather data. Your precise location is never tracked or uploaded.\n\nYou can disable this feature at any time.";
+"about.weather_toggle" = "Sync Real Weather to Game";
+"about.weather_status_active" = "📍 %@ · %d°C · %@";
+"about.weather_status_loading" = "📍 Fetching weather data...";
+"about.weather_status_requesting" = "📍 Waiting for location authorization...";
+"about.weather_status_denied" = "📍 Location permission denied. Enable it in Settings > Privacy & Security > Location Services.";
+"about.weather_status_off" = "Weather sync is off. The game world will stay clear.";
 
 // MARK: - Weather
 

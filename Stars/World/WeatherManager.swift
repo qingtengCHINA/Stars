@@ -26,6 +26,29 @@ final class WeatherManager: NSObject, CLLocationManagerDelegate {
 
     static let weatherDidChange = Notification.Name("stars.weatherDidChange")
 
+    /// UserDefaults key for location-weather toggle.
+    static let enabledKey = "stars.weather.enabled"
+
+    /// Whether the user has opted in to location-based weather sync.
+    var isEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.enabledKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: Self.enabledKey)
+            if newValue {
+                startMonitoringInternal()
+            } else {
+                stopMonitoring()
+                // Reset to clear when disabled
+                if currentEffect != .clear {
+                    currentEffect = .clear
+                    temperature = nil
+                    locationName = nil
+                    NotificationCenter.default.post(name: Self.weatherDidChange, object: nil)
+                }
+            }
+        }
+    }
+
     private(set) var currentEffect: WeatherEffect = .clear
     private(set) var temperature: Double?   // celsius
     private(set) var locationName: String?
@@ -38,6 +61,11 @@ final class WeatherManager: NSObject, CLLocationManagerDelegate {
     // MARK: - Lifecycle
 
     func startMonitoring() {
+        guard isEnabled else { return }
+        startMonitoringInternal()
+    }
+
+    private func startMonitoringInternal() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         locationManager.requestWhenInUseAuthorization()

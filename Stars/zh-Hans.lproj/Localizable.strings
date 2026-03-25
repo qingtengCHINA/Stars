@@ -314,7 +314,10 @@
 "subscription.terms" = "用户协议";
 "subscription.restore_title" = "已恢复购买";
 "subscription.restore_msg" = "已验证您的订阅状态。当前方案: %@";
-"subscription.auto_renew_notice" = "订阅按月自动续费。可随时在 设置 > Apple ID > 订阅 中取消。";
+"subscription.auto_renew_notice" = "订阅按月自动续费，当前订阅期结束前 24 小时内自动扣款。可随时在 设置 > Apple ID > 订阅 中取消。";
+"subscription.detail_notice" = "所有订阅均为自动续期月度订阅。费用将在确认购买时从你的 Apple ID 账户扣除。订阅到期前 24 小时内自动续费，除非在到期前关闭自动续费。";
+"subscription.terms_eula" = "用户协议 (EULA)";
+"subscription.monthly_period" = "月";
 "subscription.official_limit_reached" = "%@ 的 Agent 数量已达上限 (%d 个)，请先删除已有的再添加。";
 
 // MARK: - Official Provider (Model Edit)
@@ -325,6 +328,17 @@
 "edit.free_tier_notice" = "⚠️ 免费模型通过路由调用，可能出现响应慢或不稳定的情况。如果想体验更智慧、更稳定的 Agent，请";
 "edit.free_tier_subscribe" = "订阅会员";
 "models.free_model_label" = "系统免费模型";
+
+// MARK: - Location & Weather (About page)
+
+"about.weather_title" = "📍 位置与天气同步";
+"about.weather_desc" = "群星通过 Apple WeatherKit 获取你当前位置的实时天气，并同步到游戏世界中。\n\n开启后，应用将请求「使用期间」的位置权限（精度：公里级），仅用于获取天气数据，不会追踪或上传你的精确位置。\n\n你可以随时关闭此功能。";
+"about.weather_toggle" = "同步真实天气到游戏";
+"about.weather_status_active" = "📍 %@ · %d°C · %@";
+"about.weather_status_loading" = "📍 正在获取天气数据...";
+"about.weather_status_requesting" = "📍 等待位置授权...";
+"about.weather_status_denied" = "📍 位置权限未授权。请在 设置 > 隐私与安全性 > 定位服务 中开启。";
+"about.weather_status_off" = "天气同步已关闭，游戏世界将保持晴朗。";
 
 // MARK: - Weather
 

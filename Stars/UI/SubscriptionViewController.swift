@@ -293,13 +293,22 @@ final class SubscriptionViewController: UIViewController {
         }
     }
 
-    // MARK: - Footer (Restore + Privacy + Terms)
+    // MARK: - Footer (Subscription Details + Restore + Privacy + Terms)
 
     private func makeFooterSection() -> UIView {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 8
         stack.alignment = .center
+
+        // Subscription detail notice (required by App Store)
+        let detailNotice = UILabel()
+        detailNotice.text = NSLocalizedString("subscription.detail_notice", comment: "")
+        detailNotice.font = PixelTheme.bodyFont(size: 11)
+        detailNotice.textColor = PixelTheme.textMuted
+        detailNotice.numberOfLines = 0
+        detailNotice.textAlignment = .center
+        stack.addArrangedSubview(detailNotice)
 
         // Auto-renewable subscription notice
         let notice = UILabel()
@@ -310,7 +319,7 @@ final class SubscriptionViewController: UIViewController {
         notice.textAlignment = .center
         stack.addArrangedSubview(notice)
 
-        // Links row: Restore | Privacy | Terms
+        // Links row: Restore | Privacy | Terms (EULA)
         let linksStack = UIStackView()
         linksStack.axis = .horizontal
         linksStack.spacing = 4
@@ -320,7 +329,7 @@ final class SubscriptionViewController: UIViewController {
         let sep1 = makeSepLabel()
         let privacyBtn = makeLinkButton(NSLocalizedString("subscription.privacy", comment: ""), action: #selector(privacyTapped))
         let sep2 = makeSepLabel()
-        let termsBtn = makeLinkButton(NSLocalizedString("subscription.terms", comment: ""), action: #selector(termsTapped))
+        let termsBtn = makeLinkButton(NSLocalizedString("subscription.terms_eula", comment: ""), action: #selector(termsTapped))
 
         linksStack.addArrangedSubview(restoreBtn)
         linksStack.addArrangedSubview(sep1)
@@ -391,6 +400,7 @@ final class SubscriptionViewController: UIViewController {
                                (SubscriptionTier.max, maxButton)] {
             guard let button else { continue }
             if let product = store.product(for: tier) {
+                let periodLabel = NSLocalizedString("subscription.monthly_period", comment: "")
                 if current == tier {
                     button.setTitle("✓ \(tier.displayName) — " + NSLocalizedString("subscription.current", comment: ""), for: .normal)
                     button.layer.borderColor = PixelTheme.accentGreen.cgColor
@@ -398,7 +408,7 @@ final class SubscriptionViewController: UIViewController {
                     button.setTitle("✓ \(tier.displayName) — " + NSLocalizedString("subscription.included", comment: ""), for: .normal)
                     button.layer.borderColor = PixelTheme.accentGreen.withAlphaComponent(0.5).cgColor
                 } else {
-                    button.setTitle("\(tier.displayName) — \(product.displayPrice)/\(NSLocalizedString("subscription.monthly", comment: ""))", for: .normal)
+                    button.setTitle("\(tier.displayName) — \(product.displayPrice)/\(periodLabel)", for: .normal)
                     button.layer.borderColor = PixelTheme.borderWarm.cgColor
                 }
             } else {

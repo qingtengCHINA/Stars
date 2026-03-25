@@ -8,6 +8,7 @@
 
 import UIKit
 import StoreKit
+import CoreLocation
 
 final class AboutViewController: UIViewController {
 
@@ -25,6 +26,10 @@ final class AboutViewController: UIViewController {
     // QTC Dashboard (live-updated)
     private var qtcBalanceLabel: UILabel?
     private var qtcDetailView: UITextView?
+
+    // Location/Weather toggle
+    private var weatherToggle: UISwitch?
+    private var weatherStatusLabel: UILabel?
 
     // MARK: - Lifecycle
 
@@ -92,6 +97,7 @@ final class AboutViewController: UIViewController {
         contentStack.addArrangedSubview(PixelTheme.makeDivider(color: PixelTheme.borderWarm))
         contentStack.addArrangedSubview(makeOpenSourceSection())
         contentStack.addArrangedSubview(makeMusicCreditsSection())
+        contentStack.addArrangedSubview(makeLocationWeatherSection())
         contentStack.addArrangedSubview(makeQTCPurchaseSection())     // QTC purchase — above tip
         contentStack.addArrangedSubview(makeTipSection())
         contentStack.addArrangedSubview(PixelTheme.makeDivider(color: PixelTheme.borderWarm))
@@ -256,6 +262,118 @@ final class AboutViewController: UIViewController {
             linkButton.heightAnchor.constraint(equalToConstant: 40),
         ])
         return card
+    }
+
+    // MARK: - Location & Weather Section
+
+    private func makeLocationWeatherSection() -> UIView {
+        let card = UIView()
+        card.backgroundColor = PixelTheme.bgMedium
+        card.layer.borderWidth = PixelTheme.borderWidth
+        card.layer.borderColor = PixelTheme.borderWarm.cgColor
+        card.layer.cornerRadius = PixelTheme.cornerRadius
+
+        let titleLabel = UILabel()
+        titleLabel.text = NSLocalizedString("about.weather_title", comment: "")
+        titleLabel.font = PixelTheme.headerFont(size: 18)
+        titleLabel.textColor = PixelTheme.textGold
+
+        let descLabel = UILabel()
+        descLabel.text = NSLocalizedString("about.weather_desc", comment: "")
+        descLabel.font = PixelTheme.bodyFont(size: 14)
+        descLabel.textColor = PixelTheme.textTan
+        descLabel.numberOfLines = 0
+
+        // Toggle row
+        let toggleRow = UIView()
+
+        let toggleLabel = UILabel()
+        toggleLabel.text = NSLocalizedString("about.weather_toggle", comment: "")
+        toggleLabel.font = PixelTheme.boldFont(size: 15)
+        toggleLabel.textColor = PixelTheme.textCream
+        toggleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let toggle = UISwitch()
+        toggle.isOn = WeatherManager.shared.isEnabled
+        toggle.onTintColor = PixelTheme.accentGreen
+        toggle.addTarget(self, action: #selector(weatherToggleChanged(_:)), for: .valueChanged)
+        toggle.translatesAutoresizingMaskIntoConstraints = false
+        self.weatherToggle = toggle
+
+        toggleRow.addSubview(toggleLabel)
+        toggleRow.addSubview(toggle)
+        NSLayoutConstraint.activate([
+            toggleLabel.leadingAnchor.constraint(equalTo: toggleRow.leadingAnchor),
+            toggleLabel.centerYAnchor.constraint(equalTo: toggleRow.centerYAnchor),
+            toggle.trailingAnchor.constraint(equalTo: toggleRow.trailingAnchor),
+            toggle.centerYAnchor.constraint(equalTo: toggleRow.centerYAnchor),
+            toggleRow.heightAnchor.constraint(equalToConstant: 36),
+        ])
+
+        // Status label
+        let statusLabel = UILabel()
+        statusLabel.font = PixelTheme.bodyFont(size: 12)
+        statusLabel.textColor = PixelTheme.textMuted
+        statusLabel.numberOfLines = 0
+        self.weatherStatusLabel = statusLabel
+        updateWeatherStatus()
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, descLabel, toggleRow, statusLabel])
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        card.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+        ])
+        return card
+    }
+
+    @objc private func weatherToggleChanged(_ sender: UISwitch) {
+        WeatherManager.shared.isEnabled = sender.isOn
+        updateWeatherStatus()
+    }
+
+    private func updateWeatherStatus() {
+        let enabled = WeatherManager.shared.isEnabled
+        if enabled {
+            let status = CLLocationManager().authorizationStatus
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways:
+                if let name = WeatherManager.shared.locationName,
+                   let temp = WeatherManager.shared.temperature {
+                    let effect = WeatherManager.shared.currentEffect
+                    let effectKey: String
+                    switch effect {
+                    case .clear:        effectKey = "weather.clear"
+                    case .rain:         effectKey = "weather.rain"
+                    case .heavyRain:    effectKey = "weather.heavy_rain"
+                    case .snow:         effectKey = "weather.snow"
+                    case .thunderstorm: effectKey = "weather.thunderstorm"
+                    case .fog:          effectKey = "weather.fog"
+                    }
+                    let effectName = NSLocalizedString(effectKey, comment: "")
+                    weatherStatusLabel?.text = String(
+                        format: NSLocalizedString("about.weather_status_active", comment: ""),
+                        name, Int(temp), effectName
+                    )
+                } else {
+                    weatherStatusLabel?.text = NSLocalizedString("about.weather_status_loading", comment: "")
+                }
+            case .notDetermined:
+                weatherStatusLabel?.text = NSLocalizedString("about.weather_status_requesting", comment: "")
+            case .denied, .restricted:
+                weatherStatusLabel?.text = NSLocalizedString("about.weather_status_denied", comment: "")
+            @unknown default:
+                weatherStatusLabel?.text = nil
+            }
+        } else {
+            weatherStatusLabel?.text = NSLocalizedString("about.weather_status_off", comment: "")
+        }
     }
 
     // MARK: - QTC Purchase Section
