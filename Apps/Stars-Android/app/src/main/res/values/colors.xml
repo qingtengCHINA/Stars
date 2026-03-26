@@ -1,0 +1,7 @@
+<resources>
+    <color name="stars_bg">#120D0A</color>
+    <color name="stars_surface">#2A1F16</color>
+    <color name="stars_surface_alt">#3A2B1F</color>
+    <color name="stars_gold">#F2BF47</color>
+    <color name="stars_text">#F4E8C7</color>
+</resources>

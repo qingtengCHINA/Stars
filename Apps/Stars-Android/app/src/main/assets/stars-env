@@ -1,0 +1,20 @@
+# Stars Built-in Agent
+OPENROUTER_KEY=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
+MODEL=openrouter/free
+OPENROUTER_URL=https://openrouter.ai/api/v1/chat/completions
+
+# Official Provider - Free Tier
+FREE_KEY=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
+FREE_MODELS=openrouter/free
+
+# Official Provider - Plus Tier
+PLUS_KEY=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
+PLUS_MODELS=openai/gpt-oss-120b,deepseek/deepseek-v3.2,x-ai/grok-4.1-fast
+
+# Official Provider - Pro Tier
+PRO_KEY=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
+PRO_MODELS=xiaomi/mimo-v2-omni,google/gemini-2.5-flash,moonshotai/kimi-k2.5,z-ai/glm-5,openai/gpt-5.4-mini,minimax/minimax-m2.7,google/gemini-3-flash-preview
+
+# Official Provider - Max Tier
+MAX_KEY=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
+MAX_MODELS=anthropic/claude-sonnet-4.6,openai/gpt-5.3-codex
